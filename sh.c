@@ -66,7 +66,7 @@ runcmd(struct cmd *cmd)
   struct redircmd *rcmd;
 
   if(cmd == 0)
-    exit();
+    exit(0);
 
   int fd;
   char buf[BUF_SIZE];
@@ -74,7 +74,7 @@ runcmd(struct cmd *cmd)
   char* difPath = "/:bin/:";
   int i, j = 0;
   char* tempDir = (char*)malloc(BUF_SIZE * sizeof(char));
-  
+
   switch(cmd->type){
   default:
     panic("runcmd");
@@ -86,12 +86,12 @@ runcmd(struct cmd *cmd)
         write(fd, difPath, strlen(difPath)); /*write the difault value*/
     }
     close(fd);
-    
+
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
-      exit();
+      exit(0);
     exec(ecmd->argv[0], ecmd->argv);
-    
+
     /*if exec return it failed - the executable is not in the current directory*/
     if((ecmd->argv[0])[0] == '/'){ /*check for absolute path*/
         printf(2, "exec %s failed - absolute path\n", ecmd->argv[0]);
@@ -129,7 +129,7 @@ runcmd(struct cmd *cmd)
     close(rcmd->fd);
     if(open(rcmd->file, rcmd->mode) < 0){
       printf(2, "open %s failed\n", rcmd->file);
-      exit();
+      exit(0);
     }
     runcmd(rcmd->cmd);
     break;
@@ -172,7 +172,7 @@ runcmd(struct cmd *cmd)
       runcmd(bcmd->cmd);
     break;
   }
-  exit();
+  exit(0);
 }
 
 int
@@ -213,14 +213,14 @@ main(void)
       runcmd(parsecmd(buf));
     wait();
   }
-  exit();
+  exit(0);
 }
 
 void
 panic(char *s)
 {
   printf(2, "%s\n", s);
-  exit();
+  exit(0);
 }
 
 int
