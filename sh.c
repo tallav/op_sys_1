@@ -73,7 +73,7 @@ runcmd(struct cmd *cmd)
   int bytes;
   char* difPath = "/:bin/:";
   int i, j = 0;
-  char tempDir[BUF_SIZE];
+  char* tempDir = (char*)malloc(BUF_SIZE * sizeof(char));
   
   switch(cmd->type){
   default:
@@ -91,22 +91,35 @@ runcmd(struct cmd *cmd)
     if(ecmd->argv[0] == 0)
       exit();
     exec(ecmd->argv[0], ecmd->argv);
-
-    i = 0;
-    while(i < BUF_SIZE){
-        if(buf[i] == ':'){
-            printf(1, "tempDir %s", tempDir);
-        }
-        else{
-            tempDir[j] = buf[i];
-            j++;
-        }
-        i++;
-    }
+    
     /*if exec return it failed - the executable is not in the current directory*/
     if((ecmd->argv[0])[0] == '/'){ /*check for absolute path*/
         printf(2, "exec %s failed - absolute path\n", ecmd->argv[0]);
         break; /*no need to seek the executable in the directories in file path*/
+    }
+    else{ /*relative path*/
+        fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
+        bytes = read(fd, buf, BUF_SIZE);
+        /*printf(1, "buf: %s\n", buf);*/
+        i = 0;
+        while(i < bytes){
+            if(buf[i] == ':'){
+                /*printf(1, "tempDir: %s\n", tempDir);*/
+                strcpy(tempDir+strlen(tempDir), ecmd->argv[0]); /*add the prefix path to the relative path*/
+                /*printf(1, "new tempDir: %s\n", tempDir);*/
+                exec(tempDir, ecmd->argv);
+                j = 0;/*start over to next drectory in filr path*/
+                memset(tempDir, 0, strlen(tempDir)); /*reset the path string*/
+                /*printf(1, "clean tempDir: %s\n", tempDir);*/
+            }
+            else{
+                tempDir[j] = buf[i];
+                j++;
+            }
+            i++;
+        }
+        free(tempDir);
+        close(fd);
     }
     printf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
