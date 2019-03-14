@@ -12,6 +12,7 @@
 #define BACK  5
 
 #define MAXARGS 10
+#define BUF_SIZE 1024
 
 struct cmd {
   int type;
@@ -67,15 +68,46 @@ runcmd(struct cmd *cmd)
   if(cmd == 0)
     exit();
 
+  int fd;
+  char buf[BUF_SIZE];
+  int bytes;
+  char* difPath = "/:bin/:";
+  int i, j = 0;
+  char tempDir[BUF_SIZE];
+  
   switch(cmd->type){
   default:
     panic("runcmd");
 
   case EXEC:
+    fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
+    bytes = read(fd, buf, BUF_SIZE);
+    if(bytes == 0){ /*file path is empty*/
+        write(fd, difPath, strlen(difPath)); /*write the difault value*/
+    }
+    close(fd);
+    
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit();
     exec(ecmd->argv[0], ecmd->argv);
+
+    i = 0;
+    while(i < BUF_SIZE){
+        if(buf[i] == ':'){
+            printf(1, "tempDir %s", tempDir);
+        }
+        else{
+            tempDir[j] = buf[i];
+            j++;
+        }
+        i++;
+    }
+    /*if exec return it failed - the executable is not in the current directory*/
+    if((ecmd->argv[0])[0] == '/'){ /*check for absolute path*/
+        printf(2, "exec %s failed - absolute path\n", ecmd->argv[0]);
+        break; /*no need to seek the executable in the directories in file path*/
+    }
     printf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
 
