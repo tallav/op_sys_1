@@ -513,6 +513,7 @@ kill(int pid)
 int
 detach(int pid)
 { 
+  struct proc *curproc = myproc();
   struct proc *p;
   
   // Pass abandoned children to init.
