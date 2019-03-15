@@ -508,6 +508,21 @@ kill(int pid)
   return -1;
 }
 
+// transfer a child process with the given pid from the parent to the init process.
+// return 0 when succseeds or -1 if the process has no child with this pid.
+int
+detach(int pid)
+{ 
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+}
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.

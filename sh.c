@@ -98,7 +98,7 @@ runcmd(struct cmd *cmd)
         break; /*no need to seek the executable in the directories in file path*/
     }
     else{ /*relative path*/
-        fd = open("/path", O_RDWR); /*crate path file if it is not exist*/
+        fd = open("/path", O_RDWR); 
         bytes = read(fd, buf, BUF_SIZE);
         /*printf(1, "buf: %s\n", buf);*/
 		i = 0;

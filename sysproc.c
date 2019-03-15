@@ -98,3 +98,15 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// transfer a child process with the given pid from the parent to the init process.
+// return 0 when succseeds or -1 if the process has no child with this pid.
+int
+sys_detach(void)
+{
+  int pid;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  return detach(pid);
+}
