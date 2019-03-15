@@ -6,7 +6,7 @@
 int
 main(void)
 {
-	pid_t pid;
+	int pid;
 	int status;
 	int first_status;
 	int second_status;
