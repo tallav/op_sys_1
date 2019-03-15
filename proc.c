@@ -270,8 +270,8 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-	//update status
-	curproc->exitStatus = status;
+  // Update process status 
+  curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -281,8 +281,8 @@ exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(void)
-//wait(int *status)
+//wait(void)
+wait(int *status)
 {
   struct proc *p;
   int havekids, pid;
@@ -307,6 +307,9 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+		// Return the terminated child exit status.
+		if(status) /*status is not null*/
+			*status = p->exitStatus;
         release(&ptable.lock);
         return pid;
       }

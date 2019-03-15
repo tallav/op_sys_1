@@ -118,8 +118,8 @@ void            sched(void);
 void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
-//int             wait(int *status);
-int             wait(void);
+int             wait(int *status);
+//int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
