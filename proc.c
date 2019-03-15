@@ -518,16 +518,23 @@ detach(int pid)
 { 
   struct proc *curproc = myproc();
   struct proc *p;
-  
+  int procExist = -1;
+
+  if(curproc == initproc)
+    panic("init called detach");
+
+  acquire(&ptable.lock);
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == curproc){
+    if(p->pid == pid){
+	  procExist = 0;	
       p->parent = initproc;
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
   }
-  return 0;
+  release(&ptable.lock);
+  return procExist;
 }
 
 //PAGEBREAK: 36
