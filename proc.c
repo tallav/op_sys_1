@@ -524,6 +524,7 @@ detach(int pid)
         wakeup1(initproc);
     }
   }
+  return 0;
 }
 
 //PAGEBREAK: 36
