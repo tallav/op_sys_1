@@ -104,6 +104,7 @@ runcmd(struct cmd *cmd)
         fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
         bytes = read(fd, buf, BUF_SIZE);
         /*printf(1, "buf: %s\n", buf);*/
+		i = 0;
         while(i < bytes){
             if(buf[i] == ':'){
                 /*printf(1, "tempDir: %s\n", tempDir);*/
