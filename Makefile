@@ -200,8 +200,8 @@ UPROGS=\
 	_zombie\
 	_myprog\
 
-fs.img: mkfs README myprog.c myprog.o $(UPROGS)
-	./mkfs fs.img README myprog.c myprog.o $(UPROGS)
+fs.img: mkfs README path $(UPROGS)
+	./mkfs fs.img README path $(UPROGS)
 
 -include *.d
 
@@ -214,7 +214,7 @@ clean:
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
-PRINT = runoff.list runoff.spec README myprog.c myprog.o toc.hdr toc.ftr $(FILES)
+PRINT = runoff.list runoff.spec README path toc.hdr toc.ftr $(FILES)
 
 xv6.pdf: $(PRINT)
 	./runoff
@@ -270,7 +270,7 @@ EXTRA=\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	myprog.c\
 	printf.c umalloc.c\
-	README myprog.c myprog.o dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+	README path dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
 dist:

@@ -68,7 +68,6 @@ runcmd(struct cmd *cmd)
   if(cmd == 0)
     exit(0);
 
-  int hasPath = 0;
   int fd;
   char buf[BUF_SIZE];
   int bytes;
@@ -81,15 +80,13 @@ runcmd(struct cmd *cmd)
     panic("runcmd");
 
   case EXEC:
-	if(!hasPath){
-		fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
-		bytes = read(fd, buf, BUF_SIZE);
-		if(bytes == 0){ /*file path is empty*/
-			write(fd, difPath, strlen(difPath)); /*write the difault value*/
-		}
-		close(fd);
-		hasPath = 1;
+	fd = open("/path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
+	bytes = read(fd, buf, BUF_SIZE);
+	if(bytes == 0){ /*file path is empty*/
+		write(fd, difPath, strlen(difPath)); /*write the difault value*/
 	}
+	close(fd);
+
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
@@ -101,7 +98,7 @@ runcmd(struct cmd *cmd)
         break; /*no need to seek the executable in the directories in file path*/
     }
     else{ /*relative path*/
-        fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
+        fd = open("/path", O_RDWR); /*crate path file if it is not exist*/
         bytes = read(fd, buf, BUF_SIZE);
         /*printf(1, "buf: %s\n", buf);*/
 		i = 0;
