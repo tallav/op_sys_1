@@ -122,6 +122,7 @@ int             wait(int *status);
 //int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int            	detach(int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
