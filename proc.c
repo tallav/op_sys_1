@@ -282,6 +282,7 @@ exit(int status)
 // Return -1 if this process has no children.
 int
 wait(void)
+//wait(int *status)
 {
   struct proc *p;
   int havekids, pid;
