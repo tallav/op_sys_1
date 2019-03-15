@@ -513,6 +513,8 @@ kill(int pid)
 int
 detach(int pid)
 { 
+  struct proc *p;
+  
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
