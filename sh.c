@@ -74,6 +74,9 @@ runcmd(struct cmd *cmd)
   char* difPath = "/:bin/:";
   int i, j = 0;
   char* tempDir = (char*)malloc(BUF_SIZE * sizeof(char));
+  int status;
+  int status1;
+  int status2;
 
   switch(cmd->type){
   default:
@@ -100,17 +103,17 @@ runcmd(struct cmd *cmd)
     else{ /*relative path*/
         fd = open("/path", O_RDWR); 
         bytes = read(fd, buf, BUF_SIZE);
-        /*printf(1, "buf: %s\n", buf);*/
+        //printf(1, "buf: %s\n", buf);
 		i = 0;
         while(i < bytes){
             if(buf[i] == ':'){
-                /*printf(1, "tempDir: %s\n", tempDir);*/
+                //printf(1, "tempDir: %s\n", tempDir);
                 strcpy(tempDir+strlen(tempDir), ecmd->argv[0]); /*add the prefix path to the relative path*/
-                /*printf(1, "new tempDir: %s\n", tempDir);*/
+                //printf(1, "new tempDir: %s\n", tempDir);
                 exec(tempDir, ecmd->argv);
                 j = 0;/*start over to next directory in file path*/
                 memset(tempDir, 0, strlen(tempDir)); /*reset the path string*/
-                /*printf(1, "clean tempDir: %s\n", tempDir);*/
+                //printf(1, "clean tempDir: %s\n", tempDir);
             }
             else{
                 tempDir[j] = buf[i];
@@ -138,7 +141,7 @@ runcmd(struct cmd *cmd)
     lcmd = (struct listcmd*)cmd;
     if(fork1() == 0)
       runcmd(lcmd->left);
-    wait();
+    wait(&status);
     runcmd(lcmd->right);
     break;
 
@@ -162,8 +165,8 @@ runcmd(struct cmd *cmd)
     }
     close(p[0]);
     close(p[1]);
-    wait();
-    wait();
+    wait(&status1);
+    wait(&status2);
     break;
 
   case BACK:
@@ -191,6 +194,7 @@ main(void)
 {
   static char buf[100];
   int fd;
+  int status;
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -211,7 +215,7 @@ main(void)
     }
     if(fork1() == 0)
       runcmd(parsecmd(buf));
-    wait();
+    wait(&status);
   }
   exit(0);
 }
