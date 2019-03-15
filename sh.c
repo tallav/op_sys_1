@@ -68,6 +68,7 @@ runcmd(struct cmd *cmd)
   if(cmd == 0)
     exit(0);
 
+  int hasPath = 0;
   int fd;
   char buf[BUF_SIZE];
   int bytes;
@@ -80,13 +81,15 @@ runcmd(struct cmd *cmd)
     panic("runcmd");
 
   case EXEC:
-    fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
-    bytes = read(fd, buf, BUF_SIZE);
-    if(bytes == 0){ /*file path is empty*/
-        write(fd, difPath, strlen(difPath)); /*write the difault value*/
-    }
-    close(fd);
-
+	if(!hasPath){
+		fd = open("path", O_RDWR | O_CREATE); /*crate path file if it is not exist*/
+		bytes = read(fd, buf, BUF_SIZE);
+		if(bytes == 0){ /*file path is empty*/
+			write(fd, difPath, strlen(difPath)); /*write the difault value*/
+		}
+		close(fd);
+		hasPath = 1;
+	}
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(0);
@@ -108,7 +111,7 @@ runcmd(struct cmd *cmd)
                 strcpy(tempDir+strlen(tempDir), ecmd->argv[0]); /*add the prefix path to the relative path*/
                 /*printf(1, "new tempDir: %s\n", tempDir);*/
                 exec(tempDir, ecmd->argv);
-                j = 0;/*start over to next drectory in filr path*/
+                j = 0;/*start over to next directory in file path*/
                 memset(tempDir, 0, strlen(tempDir)); /*reset the path string*/
                 /*printf(1, "clean tempDir: %s\n", tempDir);*/
             }
