@@ -537,6 +537,17 @@ detach(int pid)
   return procExist;
 }
 
+// used by a process to change its priority
+void
+priority(int proc_priority)
+{
+  struct proc *curproc = myproc();
+  
+  acquire(&ptable.lock);
+  curproc->priority = proc_priority;
+  release(&ptable.lock);  
+}
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
