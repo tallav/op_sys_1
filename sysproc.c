@@ -110,3 +110,15 @@ sys_detach(void)
     return -1;
   return detach(pid);
 }
+
+//used by a process to change its priority
+int
+sys_priority(void)
+{
+  int proc_priority;
+
+  if(argint(0, &proc_priority) < 0)
+    return -1;
+  priority(proc_priority);
+  return 0;
+}

@@ -124,6 +124,8 @@ void            wakeup(void*);
 void            yield(void);
 int            	detach(int);
 void            originalScheduler(void);
+void            priority(int);
+
 
 // swtch.S
 void            swtch(struct context**, struct context*);
