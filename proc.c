@@ -131,6 +131,7 @@ found:
 void
 userinit(void)
 {
+    cprintf("entered userinit\n");
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
@@ -160,6 +161,11 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  if(policy == 1){
+      cprintf("enqueue init process\n");
+      rrq.enqueue(p);
+  }else
+      pq.put(p);
 
   release(&ptable.lock);
 }
@@ -226,6 +232,10 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+  if(policy == 1)
+      rrq.enqueue(np);
+  else
+      pq.put(np);
 
   release(&ptable.lock);
 
@@ -342,7 +352,7 @@ scheduler(void)
         switch(policy){
             case 1: /*Round Robin*/
                 cprintf("Policy 1\n");
-                originalScheduler();
+                roundRobinScheduler();
             case 2: /*Priority Scheduling*/
                 cprintf("Policy 2\n");
                 originalScheduler();
@@ -392,6 +402,42 @@ originalScheduler(void)
   }
 }
 
+void
+roundRobinScheduler(void)
+{
+  struct proc *p;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // dequeue from RoundRobinQueue the next process to run.
+    acquire(&ptable.lock);
+    p = rrq.dequeue();
+    if(p == null)
+        cprintf("curr process is null\n");
+
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    
+    release(&ptable.lock);
+
+  }
+}
+
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
@@ -422,8 +468,15 @@ sched(void)
 void
 yield(void)
 {
+  struct proc *p;
+  
   acquire(&ptable.lock);  //DOC: yieldlock
-  myproc()->state = RUNNABLE;
+  p = myproc();
+  p->state = RUNNABLE;
+  if(policy == 1)
+      rrq.enqueue(p);
+  else
+      pq.put(p);
   sched();
   release(&ptable.lock);
 }
@@ -497,8 +550,13 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan){
       p->state = RUNNABLE;
+      if(policy == 1)
+        rrq.enqueue(p);
+      else
+        pq.put(p);
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -523,8 +581,13 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        if(policy == 1)
+            rrq.enqueue(p);
+        else
+            pq.put(p);
+      }
       release(&ptable.lock);
       return 0;
     }

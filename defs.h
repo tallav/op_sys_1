@@ -123,8 +123,9 @@ int             wait(int *status);
 void            wakeup(void*);
 void            yield(void);
 int            	detach(int);
-void            originalScheduler(void);
 void            priority(int);
+void            originalScheduler(void);
+void            roundRobinScheduler(void);
 
 
 // swtch.S
