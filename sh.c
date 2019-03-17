@@ -71,7 +71,7 @@ runcmd(struct cmd *cmd)
   int fd;
   char buf[BUF_SIZE];
   int bytes;
-  char* difPath = "/:bin/:";
+  char* difPath = "/:/bin/:";
   int i, j = 0;
   char* tempDir = (char*)malloc(BUF_SIZE * sizeof(char));
   int status;
@@ -104,7 +104,7 @@ runcmd(struct cmd *cmd)
         fd = open("/path", O_RDWR); 
         bytes = read(fd, buf, BUF_SIZE);
         //printf(1, "buf: %s\n", buf);
-		i = 0;
+        i = 0;
         while(i < bytes){
             if(buf[i] == ':'){
                 //printf(1, "tempDir: %s\n", tempDir);

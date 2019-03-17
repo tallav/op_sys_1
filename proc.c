@@ -11,6 +11,7 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
+int policy = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
@@ -307,9 +308,9 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-		// Return the terminated child exit status.
-		if(status) /*status is not null*/
-			*status = p->exitStatus;
+        // Return the terminated child exit status.
+        if(status) /*status is not null*/
+                *status = p->exitStatus;
         release(&ptable.lock);
         return pid;
       }
@@ -336,6 +337,27 @@ wait(int *status)
 //      via swtch back to the scheduler.
 void
 scheduler(void)
+{
+    for(;;){
+        switch(policy){
+            case 1: /*Round Robin*/
+                cprintf("Policy 1\n");
+                originalScheduler();
+            case 2: /*Priority Scheduling*/
+                cprintf("Policy 2\n");
+                originalScheduler();
+            case 3: /*Extended Priority Scheduling*/
+                cprintf("Policy 3\n");
+                originalScheduler();
+            default: /*xv6 original scheduler*/
+                cprintf("xv6 scheduler\n");
+                originalScheduler();
+        }
+    }
+}
+
+void
+originalScheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
