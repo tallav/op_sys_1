@@ -9,8 +9,8 @@
 void initSchedDS();
 static void releasOthers();
 static void startothers(void);
-static void mpmain(void)  __attribute__((noreturn));
-static void mpmainPioneer(void)  __attribute__((noreturn));
+static void mpmain(void);
+static void mpmainPioneer(void);
 extern pde_t *kpgdir;
 extern char end[]; // first address after kernel loaded from ELF file
 
