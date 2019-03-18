@@ -396,13 +396,17 @@ originalScheduler(struct proc *p, struct cpu *c)
       c->proc = 0;
     }
     release(&ptable.lock);
-
+  }
 }
 
 void
 roundRobinScheduler(struct proc *p, struct cpu *c)
 {
-
+  struct proc *p;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  for(;;){
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 	if(rrq.isEmpty()){
@@ -426,7 +430,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 			rrq.enqueue();
     }
     release(&ptable.lock);
-
+  }
 }
 
 // Enter scheduler.  Must hold only ptable.lock
