@@ -406,7 +406,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     sti();
 	
     // dequeue from RoundRobinQueue the next process to run.
-    acquire(&ptable.lock);
+    //acquire(&ptable.lock);
 	if(!rrq.isEmpty()){
 		cprintf("una matina\n");
 		p = rrq.dequeue();
@@ -429,7 +429,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		if(p->state == RUNNABLE)
 			rrq.enqueue(p);
     }
-    release(&ptable.lock);
+    //release(&ptable.lock);
 }
 
 // Enter scheduler.  Must hold only ptable.lock
