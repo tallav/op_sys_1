@@ -11,7 +11,7 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
-int policy = 1; /*Round Robin by default*/
+int policy = 2; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
