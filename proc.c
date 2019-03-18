@@ -408,8 +408,9 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 	if(!rrq.isEmpty()){
+		cprintf("una matina\n");
 		p = rrq.dequeue();
-
+		cprintf("mison el sato\n");
 		// Switch to chosen process.  It is the process's job
 		// to release ptable.lock and then reacquire it
 		// before jumping back to us.
