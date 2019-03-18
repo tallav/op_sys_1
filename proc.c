@@ -426,8 +426,8 @@ roundRobinScheduler()
 		// Process is done running for now.
 		// It should have changed its p->state before coming back.
 		c->proc = 0;
-		if(p->state = RUNNABLE)
-			rrq.enqueue();
+		if(p->state == RUNNABLE)
+			rrq.enqueue(p);
     }
     release(&ptable.lock);
   }
