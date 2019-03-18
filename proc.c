@@ -11,7 +11,7 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
-int policy = 2; /*Round Robin by default*/
+int policy = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
@@ -407,7 +407,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 	
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
-	if(rrq.isEmpty()){
+	if(!rrq.isEmpty()){
 		p = rrq.dequeue();
 
 		// Switch to chosen process.  It is the process's job
