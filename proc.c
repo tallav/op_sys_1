@@ -373,6 +373,7 @@ scheduler(void)
 void
 originalScheduler(struct proc *p, struct cpu *c)
 {
+	p = null; /*for uninitialize error*/
     // Enable interrupts on this processor.
     sti();
 
