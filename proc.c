@@ -365,7 +365,7 @@ scheduler(void)
 }
 
 void
-originalScheduler(struct proc *p, struct cpu *c)
+originalScheduler()
 {
   struct proc *p;
   struct cpu *c = mycpu();
@@ -400,7 +400,7 @@ originalScheduler(struct proc *p, struct cpu *c)
 }
 
 void
-roundRobinScheduler(struct proc *p, struct cpu *c)
+roundRobinScheduler()
 {
   struct proc *p;
   struct cpu *c = mycpu();
