@@ -348,45 +348,30 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
-  
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
-
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    if(!rrq.isEmpty()){
-      p = rrq.dequeue();
-      
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      rpholder.add(p);
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-      rpholder.remove(p);
-      if(p->state == RUNNABLE)
-        rrq.enqueue(p);
-    }
-    release(&ptable.lock);
-
-  }
+	switch(policy){
+		case 1: /*Round Robin*/
+			roundRobinScheduler();
+			break;
+		case 2: /*Priority Scheduling*/
+			originalScheduler();
+			break;
+		case 3: /*Extended Priority Scheduling*/
+			originalScheduler();
+			break;
+		default: /*xv6 original scheduler*/
+			originalScheduler();
+			break;
+	}
 }
 
 void
 originalScheduler(struct proc *p, struct cpu *c)
 {
+  struct proc *p;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  for(;;){
     // Enable interrupts on this processor.
     sti();
 
@@ -420,28 +405,25 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
-    if(!rrq.isEmpty()){
-        p = rrq.dequeue();
-        if(p){
-            // Switch to chosen process.  It is the process's job
-            // to release ptable.lock and then reacquire it
-            // before jumping back to us.
-            c->proc = p;
-            switchuvm(p);
-            p->state = RUNNING;
-            rpholder.add(p);
+	if(rrq.isEmpty()){
+		p = rrq.dequeue();
 
-            swtch(&(c->scheduler), p->context);
-            switchkvm();
+		// Switch to chosen process.  It is the process's job
+		// to release ptable.lock and then reacquire it
+		// before jumping back to us.
+		c->proc = p;
+		switchuvm(p);
+		p->state = RUNNING;
+		rpholder.add(p);
 
-            // Process is done running for now.
-            // It should have changed its p->state before coming back.
-            rpholder.remove(p);
-            
-            c->proc = 0;
-        }
-        if(p->state == RUNNABLE)
-            rrq.enqueue(p);
+		swtch(&(c->scheduler), p->context);
+		switchkvm();
+
+		// Process is done running for now.
+		// It should have changed its p->state before coming back.
+		c->proc = 0;
+		if(p->state = RUNNABLE)
+			rrq.enqueue();
     }
     release(&ptable.lock);
 
