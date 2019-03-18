@@ -113,7 +113,7 @@ struct cpu*     mycpu(void);
 struct proc*    myproc();
 void            pinit(void);
 void            procdump(void);
-void            scheduler(void);
+void            scheduler(void) __attribute__((noreturn));
 void            sched(void);
 void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
@@ -124,8 +124,8 @@ void            wakeup(void*);
 void            yield(void);
 int            	detach(int);
 void            priority(int);
-void            originalScheduler(void);
-void            roundRobinScheduler(void);
+void            originalScheduler(struct proc*, struct cpu*);
+void            roundRobinScheduler(struct proc*, struct cpu*);
 
 
 // swtch.S

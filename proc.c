@@ -348,30 +348,31 @@ wait(int *status)
 void
 scheduler(void)
 {
-	switch(policy){
-		case 1: /*Round Robin*/
-			roundRobinScheduler();
-			break;
-		case 2: /*Priority Scheduling*/
-			originalScheduler();
-			break;
-		case 3: /*Extended Priority Scheduling*/
-			originalScheduler();
-			break;
-		default: /*xv6 original scheduler*/
-			originalScheduler();
-			break;
-	}
-}
-
-void
-originalScheduler()
-{
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
   
   for(;;){
+	switch(policy){
+		case 1: /*Round Robin*/
+			roundRobinScheduler(p, c);
+			break;
+		case 2: /*Priority Scheduling*/
+			originalScheduler(p, c);
+			break;
+		case 3: /*Extended Priority Scheduling*/
+			originalScheduler(p, c);
+			break;
+		default: /*xv6 original scheduler*/
+			originalScheduler(p, c);
+			break;
+	}
+  }
+}
+
+void
+originalScheduler(struct proc *p, struct cpu *c)
+{
     // Enable interrupts on this processor.
     sti();
 
@@ -396,17 +397,14 @@ originalScheduler()
       c->proc = 0;
     }
     release(&ptable.lock);
-  }
 }
 
 void
-roundRobinScheduler()
+roundRobinScheduler(struct proc *p, struct cpu *c)
 {
-  struct proc *p;
-  struct cpu *c = mycpu();
-  c->proc = 0;
-  
-  for(;;){
+	// Enable interrupts on this processor.
+    sti();
+	
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 	if(rrq.isEmpty()){
@@ -430,7 +428,6 @@ roundRobinScheduler()
 			rrq.enqueue(p);
     }
     release(&ptable.lock);
-  }
 }
 
 // Enter scheduler.  Must hold only ptable.lock
