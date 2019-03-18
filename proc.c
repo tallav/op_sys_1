@@ -348,7 +348,7 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p = null /*for uninitialize error*/;
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -373,7 +373,6 @@ scheduler(void)
 void
 originalScheduler(struct proc *p, struct cpu *c)
 {
-	p = null; /*for uninitialize error*/
     // Enable interrupts on this processor.
     sti();
 
