@@ -61,7 +61,6 @@ mycpu(void)
     if (cpus[i].apicid == apicid)
       return &cpus[i];
   }
-  cprintf("unknown apicid - %d\n", apicid);
   panic("unknown apicid\n");
 }
 
@@ -406,11 +405,10 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     sti();
 	
     // dequeue from RoundRobinQueue the next process to run.
-    //acquire(&ptable.lock);
+    acquire(&ptable.lock);
 	if(!rrq.isEmpty()){
-		cprintf("una matina\n");
 		p = rrq.dequeue();
-		cprintf("mison el sato\n");
+
 		// Switch to chosen process.  It is the process's job
 		// to release ptable.lock and then reacquire it
 		// before jumping back to us.
@@ -429,7 +427,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		if(p->state == RUNNABLE)
 			rrq.enqueue(p);
     }
-    //release(&ptable.lock);
+    release(&ptable.lock);
 }
 
 // Enter scheduler.  Must hold only ptable.lock
