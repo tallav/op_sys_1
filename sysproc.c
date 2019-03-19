@@ -122,3 +122,15 @@ sys_priority(void)
   priority(proc_priority);
   return 0;
 }
+
+// receives a policy identifier as an argument and changes the currently used policy.
+int
+sys_priority(void)
+{
+  int policy_id;
+
+  if(argint(0, &policy_id) < 0)
+    return -1;
+  policy(policy_id);
+  return 0;
+}

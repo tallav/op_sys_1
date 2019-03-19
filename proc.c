@@ -11,12 +11,12 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
-int policy = 1; /*Round Robin by default*/
+int currPolicy = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
 	//panic("getAccumulator: not implemented\n");
-        return 5;
+        return 0;
 }
 
 struct {
@@ -630,9 +630,32 @@ priority(int proc_priority)
 {
   struct proc *curproc = myproc();
   
-  acquire(&ptable.lock);
-  curproc->priority = proc_priority;
-  release(&ptable.lock);  
+  if(proc_priority <= 10 && proc_priority >= 0){
+      if(policy == 3 || (policy == 2 && proc_priority >= 1)){
+        acquire(&ptable.lock);
+        curproc->priority = proc_priority;
+        release(&ptable.lock); 
+      }
+  }
+}
+
+// receives a policy identifier as an argument and changes the currently used policy.
+void
+policy(int policy_id)
+{
+    struct proc *p;
+    
+    acquire(&ptable.lock);
+    currPolicy = policy_id;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(policy_id == 1) /*change to round robin policy*/
+            p->accumulator = 0;
+        else if(policy_id == 2){
+            if(p->priority == 0) /*change to priority scheduling policy*/
+                p->priority = 1;
+        }
+    }
+    release(&ptable.lock);
 }
 
 //PAGEBREAK: 36

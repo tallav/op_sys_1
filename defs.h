@@ -124,6 +124,7 @@ void            wakeup(void*);
 void            yield(void);
 int            	detach(int);
 void            priority(int);
+void            policy(int);
 void            originalScheduler(struct proc*, struct cpu*);
 void            roundRobinScheduler(struct proc*, struct cpu*);
 
