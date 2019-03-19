@@ -158,6 +158,8 @@ userinit(void)
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
 
+  if(p->state == RUNNING)
+      rpholder.remove(p);
   p->state = RUNNABLE;
   if(policy == 1)
       rrq.enqueue(p);
@@ -227,7 +229,9 @@ fork(void)
   pid = np->pid;
 
   acquire(&ptable.lock);
-
+  
+  if(np->state == RUNNING)
+      rpholder.remove(np);
   np->state = RUNNABLE;
   if(policy == 1)
       rrq.enqueue(np);
@@ -426,11 +430,12 @@ originalScheduler(struct proc *p, struct cpu *c)
 void
 roundRobinScheduler(struct proc *p, struct cpu *c)
 {
-	// Enable interrupts on this processor.
+    // Enable interrupts on this processor.
     sti();
-	
+    
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
+    
 	if(!rrq.isEmpty()){
 		p = rrq.dequeue();
 
@@ -517,6 +522,8 @@ yield(void)
   
   acquire(&ptable.lock);  //DOC: yieldlock
   p = myproc();
+  if(p->state == RUNNING)
+      rpholder.remove(p);
   p->state = RUNNABLE;
   if(policy == 1){
       rpholder.remove(p);
