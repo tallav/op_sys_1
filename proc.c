@@ -16,7 +16,7 @@ int policy = 1; /*Round Robin by default*/
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
 	//panic("getAccumulator: not implemented\n");
-        return 0;
+        return 5;
 }
 
 struct {
@@ -356,7 +356,8 @@ scheduler(void)
   c->proc = 0;
   
   for(;;){
-	switch(policy){
+      
+        switch(policy){
 		case 1: /*Round Robin*/
 			roundRobinScheduler(p, c);
 			break;
@@ -369,6 +370,7 @@ scheduler(void)
 		default: /*xv6 original scheduler*/
 			originalScheduler(p, c);
 			break;
+    
 	}
   }
 }
@@ -420,6 +422,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING;
+                
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -428,11 +431,6 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		// Process is done running for now.
 		// It should have changed its p->state before coming back.
 		c->proc = 0;
-                /*
-		rpholder.remove(p);
-		if(p->state == RUNNABLE)
-			rrq.enqueue(p);
-                */
     }
     release(&ptable.lock);
 }
@@ -475,7 +473,10 @@ yield(void)
       rpholder.remove(p);
   p->state = RUNNABLE;
   if(policy == 1)
+  {
+      rpholder.remove(p);
       rrq.enqueue(p);
+  }
   else
       pq.put(p);
   sched();
