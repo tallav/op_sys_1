@@ -53,6 +53,7 @@ struct proc {
   char name[16];                 // Process name (debugging)
   int exitStatus;
   int priority;                  // Process priority
+  long long accumulator;         // Process accumulator
 };
 
 // Process memory is laid out contiguously, low addresses first:

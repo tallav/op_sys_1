@@ -11,12 +11,10 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
-int policy = 1; /*Round Robin by default*/
+int policy = 2; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
-	//Implement this function, remove the panic line.
-	//panic("getAccumulator: not implemented\n");
-        return 5;
+        return p->accumulator;
 }
 
 struct {
@@ -235,10 +233,35 @@ fork(void)
       rrq.enqueue(np);
   else
       pq.put(np);
+  
+  np->priority = 5; // Set the priority of new process to 5
 
+  setAccumulator(np);
+  
   release(&ptable.lock);
 
   return pid;
+}
+
+void setAccumulator(struct proc *p){
+  long long acc1;
+  long long acc2; 
+  
+  if (pq.getMinAccumulator(&acc1)){
+      if (rpholder.getMinAccumulator(&acc2))
+            if (acc1<acc2)
+                   p->accumulator = acc1;
+              else
+                   p->accumulator = acc2;
+      else
+             p->accumulator = acc1;
+  }
+  else if (rpholder.getMinAccumulator(&acc2)){
+        p->accumulator = acc2;
+  }
+  else
+       p->accumulator = 0;
+          
 }
 
 // Exit the current process.  Does not return.
@@ -358,10 +381,10 @@ scheduler(void)
 			roundRobinScheduler(p, c);
 			break;
 		case 2: /*Priority Scheduling*/
-			originalScheduler(p, c);
+			priorityScheduler(p, c);
 			break;
 		case 3: /*Extended Priority Scheduling*/
-			originalScheduler(p, c);
+			priorityScheduler(p, c);
 			break;
 		default: /*xv6 original scheduler*/
 			originalScheduler(p, c);
@@ -430,6 +453,36 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     release(&ptable.lock);
 }
 
+void
+priorityScheduler(struct proc *p, struct cpu *c)
+{
+	// Enable interrupts on this processor.
+    sti();
+	
+    // dequeue from RoundRobinQueue the next process to run.
+    acquire(&ptable.lock);
+	if(!pq.isEmpty()){
+		p = pq.extractMin();
+
+		// Switch to chosen process.  It is the process's job
+		// to release ptable.lock and then reacquire it
+		// before jumping back to us.
+		c->proc = p;
+		switchuvm(p);
+		p->state = RUNNING;
+                
+		rpholder.add(p);
+
+		swtch(&(c->scheduler), p->context);
+		switchkvm();
+
+		// Process is done running for now.
+		// It should have changed its p->state before coming back.
+		c->proc = 0;
+    }
+    release(&ptable.lock);
+}
+
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
@@ -465,13 +518,15 @@ yield(void)
   acquire(&ptable.lock);  //DOC: yieldlock
   p = myproc();
   p->state = RUNNABLE;
-  if(policy == 1)
-  {
+  if(policy == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
   }
-  else
+  else if (policy == 2){
       pq.put(p);
+      rpholder.remove(p);
+      p->accumulator += p->priority;
+  }
   sched();
   release(&ptable.lock);
 }
@@ -547,6 +602,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){
       p->state = RUNNABLE;
+      setAccumulator(p);  
       if(policy == 1)
         rrq.enqueue(p);
       else
@@ -578,6 +634,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        setAccumulator(p);  
         if(policy == 1)
             rrq.enqueue(p);
         else
