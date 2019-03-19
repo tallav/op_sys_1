@@ -12,7 +12,7 @@ extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
-int policy = 2; /*Round Robin by default*/
+int POLICY = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
         return p->accumulator;
@@ -162,7 +162,7 @@ userinit(void)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = RUNNABLE;
-  if(policy == 1)
+  if(POLICY == 1)
       rrq.enqueue(p);
   else
       pq.put(p);
@@ -234,7 +234,7 @@ fork(void)
   if(np->state == RUNNING)
       rpholder.remove(np);
   np->state = RUNNABLE;
-  if(policy == 1)
+  if(POLICY == 1)
       rrq.enqueue(np);
   else
       pq.put(np);
@@ -381,7 +381,7 @@ scheduler(void)
   
   for(;;){
       
-        switch(policy){
+        switch(POLICY){
 		case 1: /*Round Robin*/
 			roundRobinScheduler(p, c);
 			break;
@@ -526,11 +526,11 @@ yield(void)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = RUNNABLE;
-  if(policy == 1){
+  if(POLICY == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
   }
-  else if (policy == 2){
+  else if (POLICY == 2){
       pq.put(p);
       rpholder.remove(p);
       p->accumulator += p->priority;
@@ -611,7 +611,7 @@ wakeup1(void *chan)
     if(p->state == SLEEPING && p->chan == chan){
       p->state = RUNNABLE;
       setAccumulator(p);  
-      if(policy == 1)
+      if(POLICY == 1)
         rrq.enqueue(p);
       else
         pq.put(p);
@@ -643,7 +643,7 @@ kill(int pid)
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
         setAccumulator(p);  
-        if(policy == 1)
+        if(POLICY == 1)
             rrq.enqueue(p);
         else
             pq.put(p);
@@ -689,7 +689,7 @@ priority(int proc_priority)
   struct proc *curproc = myproc();
   
   if(proc_priority <= 10 && proc_priority >= 0){
-      if(policy == 3 || (policy == 2 && proc_priority >= 1)){
+      if(POLICY == 3 || (POLICY == 2 && proc_priority >= 1)){
         acquire(&ptable.lock);
         curproc->priority = proc_priority;
         release(&ptable.lock); 
@@ -704,7 +704,7 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
-    currPolicy = policy_id;
+    POLICY = policy_id;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1) /*change to round robin policy*/
             p->accumulator = 0;

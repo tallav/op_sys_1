@@ -125,7 +125,7 @@ sys_priority(void)
 
 // receives a policy identifier as an argument and changes the currently used policy.
 int
-sys_priority(void)
+sys_policy(void)
 {
   int policy_id;
 
