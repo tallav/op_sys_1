@@ -11,8 +11,11 @@
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
-int policy = 2; /*Round Robin by default*/
+
 int tqCounter; /*Time Quantums counter*/
+
+
+int POLICY = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
         return p->accumulator;
@@ -162,7 +165,7 @@ userinit(void)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = RUNNABLE;
-  if(policy == 1)
+  if(POLICY == 1)
       rrq.enqueue(p);
   else
       pq.put(p);
@@ -234,7 +237,7 @@ fork(void)
   if(np->state == RUNNING)
       rpholder.remove(np);
   np->state = RUNNABLE;
-  if(policy == 1)
+  if(POLICY == 1)
       rrq.enqueue(np);
   else
       pq.put(np);
@@ -381,7 +384,7 @@ scheduler(void)
   
   for(;;){
       
-        switch(policy){
+        switch(POLICY){
 		case 1: /*Round Robin*/
 			roundRobinScheduler(p, c);
 			break;
@@ -567,6 +570,7 @@ yield(void)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = RUNNABLE;
+
   tqCounter += 1;
   /*time_t t;
   struct tm * timeinfo; 
@@ -576,15 +580,17 @@ yield(void)
   p->min = timeinfo->tm_min;
   p->sec = timeinfo->tm_sec;*/
   p->timeStamp = tqCounter;
-  if(policy == 1){
+
+
+  if(POLICY == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
   }
-  else {
+  else if (POLICY == 2){
       pq.put(p);
       rpholder.remove(p);
       p->accumulator += p->priority;
-      if (policy == 3 && (tqCounter % 100 == 0)){
+      if (POLICY == 3 && (tqCounter % 100 == 0)){
           extendedPriorityScheduler(p, mycpu());
           /*tqCounter = 0;*/
       }
@@ -665,7 +671,7 @@ wakeup1(void *chan)
     if(p->state == SLEEPING && p->chan == chan){ tqCounter = 0;
       p->state = RUNNABLE;
       setAccumulator(p);  
-      if(policy == 1)
+      if(POLICY == 1)
         rrq.enqueue(p);
       else
         pq.put(p);
@@ -697,7 +703,7 @@ kill(int pid)
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
         setAccumulator(p);  
-        if(policy == 1)
+        if(POLICY == 1)
             rrq.enqueue(p);
         else
             pq.put(p);
@@ -742,9 +748,32 @@ priority(int proc_priority)
 {
   struct proc *curproc = myproc();
   
-  acquire(&ptable.lock);
-  curproc->priority = proc_priority;
-  release(&ptable.lock);  
+  if(proc_priority <= 10 && proc_priority >= 0){
+      if(POLICY == 3 || (POLICY == 2 && proc_priority >= 1)){
+        acquire(&ptable.lock);
+        curproc->priority = proc_priority;
+        release(&ptable.lock); 
+      }
+  }
+}
+
+// receives a policy identifier as an argument and changes the currently used policy.
+void
+policy(int policy_id)
+{
+    struct proc *p;
+    
+    acquire(&ptable.lock);
+    POLICY = policy_id;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(policy_id == 1) /*change to round robin policy*/
+            p->accumulator = 0;
+        else if(policy_id == 2){
+            if(p->priority == 0) /*change to priority scheduling policy*/
+                p->priority = 1;
+        }
+    }
+    release(&ptable.lock);
 }
 
 //PAGEBREAK: 36
