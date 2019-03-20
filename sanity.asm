@@ -21,7 +21,7 @@ main(void)
 	int second_status;
 	int third_status;
 
-	pid = fork(); // the child pid is 99
+	pid = fork(); 
    a:	e8 f1 02 00 00       	call   300 <fork>
 	if(pid > 0) {
    f:	85 c0                	test   %eax,%eax

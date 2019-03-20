@@ -704,14 +704,34 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
-    POLICY = policy_id;
+    cprintf("POLICY = %d\n", POLICY);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(policy_id == 1) /*change to round robin policy*/
+        if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
+            cprintf("poliyc_id = %d\n", policy_id);
+            pq.switchToRoundRobinPolicy();
+            cprintf("pq empty = %d\n", pq.isEmpty());
             p->accumulator = 0;
-        else if(policy_id == 2){
-            if(p->priority == 0) /*change to priority scheduling policy*/
-                p->priority = 1;
         }
+        else if(policy_id == 2){ 
+            cprintf("poliyc_id = %d\n", policy_id);
+            if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
+                if(p->priority == 0) 
+                    p->priority = 1;
+            }
+            else if(POLICY == 1){ /*change from Priority scheduling to Round Robin policy*/
+                rrq.switchToPriorityQueuePolicy();
+                cprintf("rrq empty = %d\n", rrq.isEmpty());
+            }
+            else
+                break;
+        }
+        else if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
+            cprintf("poliyc_id = %d\n", policy_id);
+            pq.switchToRoundRobinPolicy();
+        }
+        else
+            break;
+        POLICY = policy_id;
     }
     release(&ptable.lock);
 }
@@ -752,3 +772,39 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+/*Testing
+int getPolicy(){
+    return POLICY;
+}
+
+int policyQueueState(){
+    if(rrq.isEmpty())
+        return 1;
+    else if(pq.isEmpty())
+        return 2;
+    else
+        return 0;
+}
+
+int holderState(){
+    if(rrq.isEmpty())
+        return 3;
+    else
+        return 0;
+}
+
+int getPriorities(int* priorities){
+    struct proc *p;
+    
+    acquire(&ptable.lock);
+    int i = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state == RUNNABLE || p->state == RUNNING){
+            priorities[i] = p->priority;
+        }
+        i++;
+    }
+    release(&ptable.lock);
+}
+*/
