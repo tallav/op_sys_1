@@ -13,8 +13,6 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter; /*Time Quantums counter*/
-
-
 int POLICY = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
@@ -439,25 +437,24 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
-    
-	if(!rrq.isEmpty()){
-		p = rrq.dequeue();
+    if(!rrq.isEmpty()){
+            p = rrq.dequeue();
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING;
-                
-		rpholder.add(p);
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = p;
+            switchuvm(p);
+            p->state = RUNNING;
+            
+            rpholder.add(p);
 
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -470,24 +467,24 @@ priorityScheduler(struct proc *p, struct cpu *c)
 	
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
-	if(!pq.isEmpty()){
-		p = pq.extractMin();
+    if(!pq.isEmpty()){
+        p = pq.extractMin();
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING; 
-                
-		rpholder.add(p);
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING; 
+        
+        rpholder.add(p);
 
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -495,40 +492,39 @@ priorityScheduler(struct proc *p, struct cpu *c)
 void
 extendedPriorityScheduler(struct proc *p, struct cpu *c)
 {
-	// Enable interrupts on this processor.
+    // Enable interrupts on this processor.
     sti();
-	
+    
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
-	if(!pq.isEmpty()){
-            //time_t curTime = time(0);
-            struct proc *np = p;
-            double max = 0;
-            for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                /*if(difftime(curTime,p->timeStamp) > max)*/
-                if (tqCounter - p->timeStamp > max)
-                    np = p;
-            }
-            
-         if (!pq.extractProc(np))
-             return;
-               
+    if(!pq.isEmpty()){
+        //time_t curTime = time(0);
+        struct proc *np = p;
+        double max = 0;
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+            /*if(difftime(curTime,p->timeStamp) > max)*/
+            if (tqCounter - p->timeStamp > max)
+                np = p;
+        }
+        
+        if (!pq.extractProc(np))
+            return;
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING;
-                
-		rpholder.add(p);
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+        
+        rpholder.add(p);
 
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -580,7 +576,6 @@ yield(void)
   p->min = timeinfo->tm_min;
   p->sec = timeinfo->tm_sec;*/
   p->timeStamp = tqCounter;
-
 
   if(POLICY == 1){
       rpholder.remove(p);
@@ -764,29 +759,24 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
-    cprintf("POLICY = %d\n", POLICY);
+    //cprintf("POLICY = %d\n", POLICY);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
-            cprintf("poliyc_id = %d\n", policy_id);
             pq.switchToRoundRobinPolicy();
-            cprintf("pq empty = %d\n", pq.isEmpty());
             p->accumulator = 0;
         }
         else if(policy_id == 2){ 
-            cprintf("poliyc_id = %d\n", policy_id);
             if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
                 if(p->priority == 0) 
                     p->priority = 1;
             }
             else if(POLICY == 1){ /*change from Priority scheduling to Round Robin policy*/
                 rrq.switchToPriorityQueuePolicy();
-                cprintf("rrq empty = %d\n", rrq.isEmpty());
             }
             else
                 break;
         }
         else if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
-            cprintf("poliyc_id = %d\n", policy_id);
             pq.switchToRoundRobinPolicy();
         }
         else
