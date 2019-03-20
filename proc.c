@@ -12,6 +12,9 @@ extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
+int tqCounter; /*Time Quantums counter*/
+
+
 int POLICY = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
@@ -475,6 +478,47 @@ priorityScheduler(struct proc *p, struct cpu *c)
 		// before jumping back to us.
 		c->proc = p;
 		switchuvm(p);
+		p->state = RUNNING; 
+                
+		rpholder.add(p);
+
+		swtch(&(c->scheduler), p->context);
+		switchkvm();
+
+		// Process is done running for now.
+		// It should have changed its p->state before coming back.
+		c->proc = 0;
+    }
+    release(&ptable.lock);
+}
+
+void
+extendedPriorityScheduler(struct proc *p, struct cpu *c)
+{
+	// Enable interrupts on this processor.
+    sti();
+	
+    // dequeue from RoundRobinQueue the next process to run.
+    acquire(&ptable.lock);
+	if(!pq.isEmpty()){
+            //time_t curTime = time(0);
+            struct proc *np = p;
+            double max = 0;
+            for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+                /*if(difftime(curTime,p->timeStamp) > max)*/
+                if (tqCounter - p->timeStamp > max)
+                    np = p;
+            }
+            
+         if (!pq.extractProc(np))
+             return;
+               
+
+		// Switch to chosen process.  It is the process's job
+		// to release ptable.lock and then reacquire it
+		// before jumping back to us.
+		c->proc = p;
+		switchuvm(p);
 		p->state = RUNNING;
                 
 		rpholder.add(p);
@@ -526,6 +570,18 @@ yield(void)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = RUNNABLE;
+
+  tqCounter += 1;
+  /*time_t t;
+  struct tm * timeinfo; 
+  time (&t);
+  timeinfo = localtime (&t);
+  p->hours = timeinfo->tm_hour;
+  p->min = timeinfo->tm_min;
+  p->sec = timeinfo->tm_sec;*/
+  p->timeStamp = tqCounter;
+
+
   if(POLICY == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
@@ -534,6 +590,10 @@ yield(void)
       pq.put(p);
       rpholder.remove(p);
       p->accumulator += p->priority;
+      if (POLICY == 3 && (tqCounter % 100 == 0)){
+          extendedPriorityScheduler(p, mycpu());
+          /*tqCounter = 0;*/
+      }
   }
   sched();
   release(&ptable.lock);
@@ -581,7 +641,7 @@ sleep(void *chan, struct spinlock *lk)
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
     acquire(&ptable.lock);  //DOC: sleeplock1
-    release(lk);
+    release(lk); tqCounter = 0;
   }
   // Go to sleep.
   p->chan = chan;
@@ -608,7 +668,7 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan){
+    if(p->state == SLEEPING && p->chan == chan){ tqCounter = 0;
       p->state = RUNNABLE;
       setAccumulator(p);  
       if(POLICY == 1)

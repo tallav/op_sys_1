@@ -36,6 +36,21 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+/*
+struct timeStamp{ // Last time proccess was in use
+  int hours;              
+  int min;
+  int sec;
+};*/
+
+struct perf {
+    int ctime;
+    int ttime;
+    int stime;
+    int retime;
+    int rutime;
+};
+
 // Per-process state
 struct proc {
   uint sz;                       // Size of process memory (bytes)
@@ -54,7 +69,12 @@ struct proc {
   int exitStatus;
   int priority;                  // Process priority
   long long accumulator;         // Process accumulator
+  int timeStamp;                 
+  struct perf performance;
 };
+
+
+
 
 // Process memory is laid out contiguously, low addresses first:
 //   text
