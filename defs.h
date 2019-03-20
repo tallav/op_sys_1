@@ -132,7 +132,6 @@ void            roundRobinScheduler(struct proc*, struct cpu*);
 void            priorityScheduler(struct proc*, struct cpu*);
 void            setAccumulator(struct proc* p);
 
-
 // swtch.S
 void            swtch(struct context**, struct context*);
 

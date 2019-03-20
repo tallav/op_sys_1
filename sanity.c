@@ -13,7 +13,7 @@ main(void)
 	int second_status;
 	int third_status;
 
-	pid = fork(); // the child pid is 99
+	pid = fork(); 
 	if(pid > 0) {
 		first_status = detach(pid); // status = 0
 		printf(1, "first_status: %d\n", first_status);

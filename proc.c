@@ -13,8 +13,6 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter = 0; /*Time Quantums counter*/
-
-
 int POLICY = 1; /*Round Robin by default*/
 
 long long getAccumulator(struct proc *p) {
@@ -488,6 +486,7 @@ priorityScheduler(struct proc *p, struct cpu *c)
 	
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
+
 	if(!pq.isEmpty()){
 		p = pq.extractMin();
 
@@ -517,11 +516,12 @@ priorityScheduler(struct proc *p, struct cpu *c)
 void
 extendedPriorityScheduler(struct proc *p, struct cpu *c)
 {
-	// Enable interrupts on this processor.
+    // Enable interrupts on this processor.
     sti();
-	
+    
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
+
 	if(!pq.isEmpty()){
             //time_t curTime = time(0);
             struct proc *np = p;
@@ -602,7 +602,7 @@ yield(void)
   //acquire(&tickslock);
   p->performance.rutime += ticks - p->performanceUtil.startRu;
   //release(&tickslock);
-  
+
   if(POLICY == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
@@ -796,14 +796,29 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
-    POLICY = policy_id;
+    //cprintf("POLICY = %d\n", POLICY);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(policy_id == 1) /*change to round robin policy*/
+        if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
+            pq.switchToRoundRobinPolicy();
             p->accumulator = 0;
-        else if(policy_id == 2){
-            if(p->priority == 0) /*change to priority scheduling policy*/
-                p->priority = 1;
         }
+        else if(policy_id == 2){ 
+            if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
+                if(p->priority == 0) 
+                    p->priority = 1;
+            }
+            else if(POLICY == 1){ /*change from Priority scheduling to Round Robin policy*/
+                rrq.switchToPriorityQueuePolicy();
+            }
+            else
+                break;
+        }
+        else if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
+            pq.switchToRoundRobinPolicy();
+        }
+        else
+            break;
+        POLICY = policy_id;
     }
     release(&ptable.lock);
 }
@@ -846,6 +861,7 @@ procdump(void)
 }
 
 
+
 // Return the pidof the terminated child process or -1 upon failure.
 int
 wait_stat(int* status, struct perf * performance){
@@ -859,3 +875,39 @@ wait_stat(int* status, struct perf * performance){
       
       return curproc->pid;
 }
+
+/*Testing
+int getPolicy(){
+    return POLICY;
+}
+
+int policyQueueState(){
+    if(rrq.isEmpty())
+        return 1;
+    else if(pq.isEmpty())
+        return 2;
+    else
+        return 0;
+}
+
+int holderState(){
+    if(rrq.isEmpty())
+        return 3;
+    else
+        return 0;
+}
+
+int getPriorities(int* priorities){
+    struct proc *p;
+    
+    acquire(&ptable.lock);
+    int i = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state == RUNNABLE || p->state == RUNNING){
+            priorities[i] = p->priority;
+        }
+        i++;
+    }
+    release(&ptable.lock);
+}
+*/
