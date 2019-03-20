@@ -134,3 +134,15 @@ sys_policy(void)
   policy(policy_id);
   return 0;
 }
+
+// return the pid of the terminated child process or -1 upon failure.
+int
+sys_wait_stat(void)
+{
+     int* status;
+     struct perf* perform;
+
+     if ((argptr(0, (char**)(&status), sizeof(int)) < 0) || (argptr(0, (void*)(&perform), sizeof(*perform)) < 0))
+        return -1;
+    return wait_stat(status,perform);
+}

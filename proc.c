@@ -12,7 +12,7 @@ extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
-int tqCounter; /*Time Quantums counter*/
+int tqCounter = 0; /*Time Quantums counter*/
 
 
 int POLICY = 1; /*Round Robin by default*/
@@ -237,6 +237,12 @@ fork(void)
   if(np->state == RUNNING)
       rpholder.remove(np);
   np->state = RUNNABLE;
+    
+  //acquire(&tickslock);
+  np->performance.ctime = ticks;
+  np->performanceUtil.startRe = ticks;
+  //release(&tickslock);
+  
   if(POLICY == 1)
       rrq.enqueue(np);
   else
@@ -245,6 +251,7 @@ fork(void)
   np->priority = 5; // Set the priority of new process to 5
 
   setAccumulator(np);
+
   
   release(&ptable.lock);
 
@@ -315,6 +322,11 @@ exit(int status)
   curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  
+  //acquire(&tickslock);
+  curproc->performance.ttime = ticks;
+  //release(&tickslock);
+  
   sched();
   panic("zombie exit");
 }
@@ -420,7 +432,10 @@ originalScheduler(struct proc *p, struct cpu *c)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
+      //acquire(&tickslock);
+      p->performanceUtil.startRu = ticks;
+      p->performance.retime += ticks - p->performanceUtil.startRe; 
+      //release(&tickslock);
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -449,7 +464,10 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING;
-                
+               // acquire(&tickslock);
+                p->performanceUtil.startRu = ticks;
+                p->performance.retime += ticks - p->performanceUtil.startRe; 
+              //  release(&tickslock);
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -479,6 +497,10 @@ priorityScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING; 
+                //acquire(&tickslock);
+                p->performance.retime += ticks - p->performanceUtil.startRe; 
+                p->performanceUtil.startRu = ticks;
+                //release(&tickslock);
                 
 		rpholder.add(p);
 
@@ -510,9 +532,13 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                     np = p;
             }
             
-         if (!pq.extractProc(np))
-             return;
+            if (!pq.extractProc(np))
+                return;
                
+             // acquire(&tickslock);
+                np->performance.retime += ticks - p->performanceUtil.startRe; 
+                np->performanceUtil.startRu = ticks;
+                //release(&tickslock);
 
 		// Switch to chosen process.  It is the process's job
 		// to release ptable.lock and then reacquire it
@@ -572,16 +598,11 @@ yield(void)
   p->state = RUNNABLE;
 
   tqCounter += 1;
-  /*time_t t;
-  struct tm * timeinfo; 
-  time (&t);
-  timeinfo = localtime (&t);
-  p->hours = timeinfo->tm_hour;
-  p->min = timeinfo->tm_min;
-  p->sec = timeinfo->tm_sec;*/
   p->timeStamp = tqCounter;
-
-
+  //acquire(&tickslock);
+  p->performance.rutime += ticks - p->performanceUtil.startRu;
+  //release(&tickslock);
+  
   if(POLICY == 1){
       rpholder.remove(p);
       rrq.enqueue(p);
@@ -641,11 +662,14 @@ sleep(void *chan, struct spinlock *lk)
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
     acquire(&ptable.lock);  //DOC: sleeplock1
-    release(lk); tqCounter = 0;
+    release(lk); 
   }
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+  //acquire(&tickslock); 
+  p->performanceUtil.startSt = ticks;  
+  //release(&tickslock);
 
   sched();
 
@@ -668,8 +692,12 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan){ tqCounter = 0;
+    if(p->state == SLEEPING && p->chan == chan){ 
       p->state = RUNNABLE;
+      //acquire(&tickslock);
+      p->performance.stime += ticks - p->performanceUtil.startSt; 
+      p->performanceUtil.startRe = ticks;
+      //release(&tickslock);
       setAccumulator(p);  
       if(POLICY == 1)
         rrq.enqueue(p);
@@ -702,6 +730,10 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        //acquire(&tickslock); 
+        p->performanceUtil.startRe = ticks;  
+        p->performance.stime += ticks - p->performanceUtil.startSt; 
+        //release(&tickslock);
         setAccumulator(p);  
         if(POLICY == 1)
             rrq.enqueue(p);
@@ -811,4 +843,19 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+
+// Return the pidof the terminated child process or -1 upon failure.
+int
+wait_stat(int* status, struct perf * performance){
+      struct proc *curproc = myproc();
+      
+      if (!curproc)
+          return -1;
+      
+      *performance = curproc->performance;
+      *status = curproc->exitStatus;
+      
+      return curproc->pid;
 }

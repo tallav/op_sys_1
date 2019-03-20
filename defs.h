@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct perf;
 
 // bio.c
 void            binit(void);
@@ -125,6 +126,7 @@ void            yield(void);
 int            	detach(int);
 void            priority(int);
 void            policy(int);
+int             wait_stat(int*, struct perf*);
 void            originalScheduler(struct proc*, struct cpu*);
 void            roundRobinScheduler(struct proc*, struct cpu*);
 void            priorityScheduler(struct proc*, struct cpu*);

@@ -51,6 +51,12 @@ struct perf {
     int rutime;
 };
 
+struct perfUtil{
+    int startSt;
+    int startRe;
+    int startRu;
+};
+
 // Per-process state
 struct proc {
   uint sz;                       // Size of process memory (bytes)
@@ -71,6 +77,7 @@ struct proc {
   long long accumulator;         // Process accumulator
   int timeStamp;                 
   struct perf performance;
+  struct perfUtil performanceUtil;
 };
 
 
