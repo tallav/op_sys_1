@@ -102,6 +102,10 @@ found:
   p->pid = nextpid++;
 
   release(&ptable.lock);
+  
+  acquire(&tickslock);
+  p->performance.ctime = ticks;
+  release(&tickslock);
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -230,16 +234,15 @@ fork(void)
 
   pid = np->pid;
 
+  acquire(&tickslock);
+  np->performance.ctime = ticks;
+  release(&tickslock);
+  
   acquire(&ptable.lock);
   
   if(np->state == RUNNING)
       rpholder.remove(np);
   np->state = RUNNABLE;
-    
-  //acquire(&tickslock);
-  np->performance.ctime = ticks;
-  np->performanceUtil.startRe = ticks;
-  //release(&tickslock);
   
   if(POLICY == 1)
       rrq.enqueue(np);
@@ -250,9 +253,7 @@ fork(void)
 
   setAccumulator(np);
 
-  
   release(&ptable.lock);
-
   return pid;
 }
 
@@ -302,7 +303,7 @@ exit(int status)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-
+  
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -320,10 +321,6 @@ exit(int status)
   curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  
-  //acquire(&tickslock);
-  curproc->performance.ttime = ticks;
-  //release(&tickslock);
   
   sched();
   panic("zombie exit");
@@ -417,7 +414,7 @@ originalScheduler(struct proc *p, struct cpu *c)
 {
     // Enable interrupts on this processor.
     sti();
-
+	
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -430,10 +427,6 @@ originalScheduler(struct proc *p, struct cpu *c)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      //acquire(&tickslock);
-      p->performanceUtil.startRu = ticks;
-      p->performance.retime += ticks - p->performanceUtil.startRe; 
-      //release(&tickslock);
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -449,7 +442,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 {
     // Enable interrupts on this processor.
     sti();
-    
+  
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
     
@@ -462,10 +455,10 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING;
-               // acquire(&tickslock);
-                p->performanceUtil.startRu = ticks;
-                p->performance.retime += ticks - p->performanceUtil.startRe; 
-              //  release(&tickslock);
+		//acquire(&tickslock);
+		//p->performanceUtil.startRu = currTicks;
+		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
+		//release(&tickslock);
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -496,11 +489,10 @@ priorityScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING; 
-                //acquire(&tickslock);
-                p->performance.retime += ticks - p->performanceUtil.startRe; 
-                p->performanceUtil.startRu = ticks;
-                //release(&tickslock);
-                
+		//acquire(&tickslock);
+		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
+		//p->performanceUtil.startRu = currTicks;
+		//release(&tickslock); 
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -518,27 +510,27 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 {
     // Enable interrupts on this processor.
     sti();
-    
+	
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 
 	if(!pq.isEmpty()){
-            //time_t curTime = time(0);
-            struct proc *np = p;
-            double max = 0;
-            for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                /*if(difftime(curTime,p->timeStamp) > max)*/
-                if (tqCounter - p->timeStamp > max)
-                    np = p;
-            }
-            
-            if (!pq.extractProc(np))
-                return;
-               
-             // acquire(&tickslock);
-                np->performance.retime += ticks - p->performanceUtil.startRe; 
-                np->performanceUtil.startRu = ticks;
-                //release(&tickslock);
+		//time_t curTime = time(0);
+		struct proc *np = p;
+		double max = 0;
+		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+			/*if(difftime(curTime,p->timeStamp) > max)*/
+			if (tqCounter - p->timeStamp > max)
+				np = p;
+		}
+		
+		if (!pq.extractProc(np))
+			return;
+		   
+		//acquire(&tickslock);
+		//np->performance.retime += currTicks - p->performanceUtil.startRe; 
+		//np->performanceUtil.startRu = currTicks;
+		//release(&tickslock);
 
 		// Switch to chosen process.  It is the process's job
 		// to release ptable.lock and then reacquire it
@@ -546,7 +538,6 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 		c->proc = p;
 		switchuvm(p);
 		p->state = RUNNING;
-                
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -600,7 +591,7 @@ yield(void)
   tqCounter += 1;
   p->timeStamp = tqCounter;
   //acquire(&tickslock);
-  p->performance.rutime += ticks - p->performanceUtil.startRu;
+  //p->performance.rutime += currTicks - p->performanceUtil.startRu;
   //release(&tickslock);
 
   if(POLICY == 1){
@@ -668,7 +659,7 @@ sleep(void *chan, struct spinlock *lk)
   p->chan = chan;
   p->state = SLEEPING;
   //acquire(&tickslock); 
-  p->performanceUtil.startSt = ticks;  
+  //p->performanceUtil.startSt = currTicks;  
   //release(&tickslock);
 
   sched();
@@ -695,8 +686,8 @@ wakeup1(void *chan)
     if(p->state == SLEEPING && p->chan == chan){ 
       p->state = RUNNABLE;
       //acquire(&tickslock);
-      p->performance.stime += ticks - p->performanceUtil.startSt; 
-      p->performanceUtil.startRe = ticks;
+      //p->performance.stime += ticks - p->performanceUtil.startSt; 
+      //p->performanceUtil.startRe = ticks;
       //release(&tickslock);
       setAccumulator(p);  
       if(POLICY == 1)
@@ -722,7 +713,7 @@ int
 kill(int pid)
 {
   struct proc *p;
-
+	
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -731,8 +722,8 @@ kill(int pid)
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
         //acquire(&tickslock); 
-        p->performanceUtil.startRe = ticks;  
-        p->performance.stime += ticks - p->performanceUtil.startSt; 
+        //p->performanceUtil.startRe = currTicks;  
+        //p->performance.stime += currTicks - p->performanceUtil.startSt; 
         //release(&tickslock);
         setAccumulator(p);  
         if(POLICY == 1)
@@ -874,6 +865,24 @@ wait_stat(int* status, struct perf * performance){
       *status = curproc->exitStatus;
       
       return curproc->pid;
+}
+
+// increments performence to all proccesses that are running or sleeping
+void updatePerformance(){
+  struct proc *p;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == RUNNABLE){
+	  p->performance.retime++;
+	}
+	if(p->state == RUNNING){
+      p->performance.rutime++;
+    }
+    if(p->state == SLEEPING){
+      p->performance.stime++;
+    }
+  }
+  release(&ptable.lock);
 }
 
 /*Testing
