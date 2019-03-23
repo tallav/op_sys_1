@@ -620,6 +620,7 @@ createdelete(void)
   }
 
   for(pi = 0; pi < 4; pi++){
+	printf(1, "entered wait\n");
     wait(0);
   }
 
