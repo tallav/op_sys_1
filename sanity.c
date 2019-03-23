@@ -39,7 +39,19 @@ main(int argc, char **argv)
             printf(1, "exit status after is %d\n", status);
         }
 		exit(0);
+		
 	case 2:
+		pid = fork();
+        if (pid == 0) {
+            exit(5);
+        }
+        else {
+            wait(&status);
+            printf(1, "exit status after is %d\n", status);
+        }
+		exit(0);
+		
+	case 3:
 		pid = fork(); 
 		if(pid == 0){ /*child code*/
 			printf(1, "child process\n");
