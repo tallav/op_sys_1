@@ -13,7 +13,8 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter = 0; /*Time Quantums counter*/
-int POLICY = 2;
+int POLICY = 1;
+int avoidStarv = 0; 
 
 long long getAccumulator(struct proc *p) {
         return p->accumulator;
@@ -392,6 +393,9 @@ scheduler(void)
   for(;;){
       
     switch(POLICY){
+        case 0: /*for testing - xv6 original scheduler*/
+            originalScheduler(p, c);
+            break;
         case 1: /*Round Robin*/
             roundRobinScheduler(p, c);
             break;
@@ -401,8 +405,8 @@ scheduler(void)
         case 3: /*Extended Priority Scheduling*/
             extendedPriorityScheduler(p, c);
             break;
-        default: /*for testing - xv6 original scheduler*/
-            originalScheduler(p, c);
+        default: /*Round Robin*/
+            roundRobinScheduler(p, c);
             break;
     }
   }
@@ -602,7 +606,7 @@ yield(void)
       rpholder.remove(p);
       p->accumulator += p->priority;
       if (POLICY == 3 && (tqCounter % 100 == 0)){
-          extendedPriorityScheduler(p, mycpu());
+         avoidStarv = 1;
           /*tqCounter = 0;*/
       }
   }
