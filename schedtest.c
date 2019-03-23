@@ -3,12 +3,12 @@
 #include "fcntl.h"
 
 int
-main(void)
+main(int argc, char **argv)
 {
     int pid;
     pid = fork(); 
     if(pid == 0){ /*child code*/
-        ls();
+        printf("child process");
     }else{ /*parent code*/
         wait(0);
     }
