@@ -362,8 +362,8 @@ wait(int *status)
         p->state = UNUSED;
         // Return the terminated child exit status.
         if(status != null){ 
-			*status = p->exitStatus;
-		}
+            *status = p->exitStatus;
+        }
         release(&ptable.lock);
         return pid;
       }
@@ -397,24 +397,23 @@ scheduler(void)
   
   for(;;){
       
-        switch(POLICY){
-		case 0: /*for testing - xv6 original scheduler*/
-			originalScheduler(p, c);
-			break;
-		case 1: /*Round Robin*/
-			roundRobinScheduler(p, c);
-			break;
-		case 2: /*Priority Scheduling*/
-			priorityScheduler(p, c);
-			break;
-		case 3: /*Extended Priority Scheduling*/
-                        extendedPriorityScheduler(p, c);
-			break;
-		default: /*Round Robin*/
-			roundRobinScheduler(p, c);
-			break;
-    
-	}
+    switch(POLICY){
+        case 0: /*for testing - xv6 original scheduler*/
+            originalScheduler(p, c);
+            break;
+        case 1: /*Round Robin*/
+            roundRobinScheduler(p, c);
+            break;
+        case 2: /*Priority Scheduling*/
+            priorityScheduler(p, c);
+            break;
+        case 3: /*Extended Priority Scheduling*/
+            extendedPriorityScheduler(p, c);
+            break;
+        default: /*Round Robin*/
+            roundRobinScheduler(p, c);
+            break;
+    }
   }
 }
 
@@ -455,63 +454,63 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
     
-	if(!rrq.isEmpty()){
-                //cprintf("rrq is not empty");
-		p = rrq.dequeue();
+    if(!rrq.isEmpty()){
+            //cprintf("rrq is not empty");
+            p = rrq.dequeue();
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING;
-		//acquire(&tickslock);
-		//p->performanceUtil.startRu = currTicks;
-		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
-		//release(&tickslock);
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
-                
-                rpholder.remove(p);
-                rpholder.add(p);
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
-    }
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = p;
+            switchuvm(p);
+            p->state = RUNNING;
+            //acquire(&tickslock);
+            //p->performanceUtil.startRu = currTicks;
+            //p->performance.retime += currTicks - p->performanceUtil.startRe; 
+            //release(&tickslock);
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
+            
+            rpholder.remove(p);
+            rpholder.add(p);
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
+}
     release(&ptable.lock);
 }
 
 void
 priorityScheduler(struct proc *p, struct cpu *c)
 {
-	// Enable interrupts on this processor.
+    // Enable interrupts on this processor.
     sti();
-	
+    
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 
-	if(!pq.isEmpty()){
-		p = pq.extractMin();
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING; 
-		//acquire(&tickslock);
-		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
-		//p->performanceUtil.startRu = currTicks;
-		//release(&tickslock); 
-                rpholder.remove(p);
-		rpholder.add(p);
+    if(!pq.isEmpty()){
+        p = pq.extractMin();
 
-		swtch(&(c->scheduler), p->context);
-		switchkvm();
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING; 
+        //acquire(&tickslock);
+        //p->performance.retime += currTicks - p->performanceUtil.startRe; 
+        //p->performanceUtil.startRu = currTicks;
+        //release(&tickslock); 
+        rpholder.add(p);
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -521,46 +520,47 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 {
     // Enable interrupts on this processor.
     sti();
-	
+    
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 
-	if(!pq.isEmpty()){
-		//time_t curTime = time(0);
-		struct proc *np = p;
-                if (avoidStarv){
-                    double max = 0;
-                    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                            /*if(difftime(curTime,p->timeStamp) > max)*/
-                            if (tqCounter - p->timeStamp > max)
-                                    np = p;
-                    }
-                    avoidStarv = 0;
-                    if (!pq.extractProc(np))
-                            return;
-                } else{
-                    np = pq.extractMin();
+
+    if(!pq.isEmpty()){
+            //time_t curTime = time(0);
+            struct proc *np = p;
+            if (avoidStarv){
+                double max = 0;
+                for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+                        /*if(difftime(curTime,p->timeStamp) > max)*/
+                        if (tqCounter - p->timeStamp > max)
+                                np = p;
                 }
-		//acquire(&tickslock);
-		//np->performance.retime += currTicks - p->performanceUtil.startRe; 
-		//np->performanceUtil.startRu = currTicks;
-		//release(&tickslock);
+                avoidStarv = 0;
+                if (!pq.extractProc(np))
+                        return;
+            } else{
+                np = pq.extractMin();
+            }
+            //acquire(&tickslock);
+            //np->performance.retime += currTicks - p->performanceUtil.startRe; 
+            //np->performanceUtil.startRu = currTicks;
+            //release(&tickslock);
 
-		// Switch to chosen process.  It is the process's job
-		// to release ptable.lock and then reacquire it
-		// before jumping back to us.
-		c->proc = np;
-		switchuvm(np);
-		np->state = RUNNING;
-                rpholder.remove(np);
-		rpholder.add(np);
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = np;
+            switchuvm(np);
+            np->state = RUNNING;
+            rpholder.remove(np);
+            rpholder.add(np);
 
-		swtch(&(c->scheduler), np->context);
-		switchkvm();
+            swtch(&(c->scheduler), np->context);
+            switchkvm();
 
-		// Process is done running for now.
-		// It should have changed its p->state before coming back.
-		c->proc = 0;
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -731,7 +731,7 @@ int
 kill(int pid)
 {
   struct proc *p;
-	
+    
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -773,10 +773,10 @@ detach(int pid)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
-	  procExist = 0;	
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
+        procExist = 0;	
+        p->parent = initproc;
+        if(p->state == ZOMBIE)
+            wakeup1(initproc);
     }
   }
   release(&ptable.lock);
@@ -825,7 +825,7 @@ policy(int policy_id)
         }
         POLICY = policy_id;
     }
-	cprintf("update POLICY to %d\n", POLICY);
+    cprintf("update POLICY to %d\n", POLICY);
     release(&ptable.lock);
 }
 
@@ -866,8 +866,6 @@ procdump(void)
   }
 }
 
-
-
 // Return the pidof the terminated child process or -1 upon failure.
 int
 wait_stat(int* status, struct perf * performance){
@@ -888,9 +886,9 @@ void updatePerformance(){
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == RUNNABLE){
-	  p->performance.retime++;
-	}
-	if(p->state == RUNNING){
+        p->performance.retime++;
+    }
+    if(p->state == RUNNING){
       p->performance.rutime++;
     }
     if(p->state == SLEEPING){
