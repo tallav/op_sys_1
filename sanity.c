@@ -6,7 +6,7 @@
 int
 main(void)
 {
-        
+        /*
         int pid;
 	int status;
 	int first_status;
@@ -23,10 +23,10 @@ main(void)
 		printf(1, "third_status: %d\n", third_status);
 	}
 	wait(&status);
-        
+        */
         int pid2 = fork();
         if (pid2 == 0) {
-            sleep(100);
+            //sleep(300);
             exit(5);
         }
         else {
