@@ -7,11 +7,6 @@ int
 main(int argc, char **argv)
 {
 	if(argc < 2){
-		exit(0);
-	}
-	int testNum = atoi(argv[1]);
-	switch(testNum){
-	case 1:
 		int pid;
 		int status;
 		int first_status;
@@ -28,7 +23,11 @@ main(int argc, char **argv)
 		}
 		wait(&status);
 		exit(0);
-	case 2:
+	}
+	
+	int testNum = atoi(argv[1]);
+	switch(testNum){
+	case 1:
         int pid = fork();
         if (pid == 0) {
             sleep(300);
@@ -40,7 +39,7 @@ main(int argc, char **argv)
             printf(1, "exit status after is %d\n", status);
         }
 		exit(0);
-	case 3:
+	case 2:
 		int pid;
 		pid = fork(); 
 		if(pid == 0){ /*child code*/
