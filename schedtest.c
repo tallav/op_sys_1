@@ -8,7 +8,7 @@ main(int argc, char **argv)
     int pid;
     pid = fork(); 
     if(pid == 0){ /*child code*/
-        printf(1, "child process");
+        printf(1, "child process\n");
     }else{ /*parent code*/
         wait(0);
     }
