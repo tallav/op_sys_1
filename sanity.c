@@ -6,9 +6,10 @@
 int
 main(int argc, char **argv)
 {
+	int pid;
+	int status;
+	
 	if(argc < 2){
-		int pid;
-		int status;
 		int first_status;
 		int second_status;
 		int third_status;
@@ -28,19 +29,17 @@ main(int argc, char **argv)
 	int testNum = atoi(argv[1]);
 	switch(testNum){
 	case 1:
-        int pid = fork();
+        pid = fork();
         if (pid == 0) {
             sleep(300);
             exit(5);
         }
         else {
-            int status;
             wait(&status);
             printf(1, "exit status after is %d\n", status);
         }
 		exit(0);
 	case 2:
-		int pid;
 		pid = fork(); 
 		if(pid == 0){ /*child code*/
 			printf(1, "child process\n");
