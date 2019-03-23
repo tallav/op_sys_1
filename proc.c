@@ -809,8 +809,8 @@ policy(int policy_id)
             pq.switchToRoundRobinPolicy();
         }
         POLICY = policy_id;
-		cprintf("POLICY = %d\n", POLICY);
     }
+	cprintf("update POLICY to %d\n", POLICY);
     release(&ptable.lock);
 }
 

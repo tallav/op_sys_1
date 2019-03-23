@@ -30,7 +30,7 @@ main(int argc, char **argv)
 	case 1:
         pid = fork();
         if (pid == 0) {
-            sleep(100);
+            sleep(300);
             exit(5);
         }
         else {
