@@ -13,8 +13,9 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter = 0; /*Time Quantums counter*/
-int POLICY = 1;
+int POLICY = 3;
 int avoidStarv = 0; 
+
 
 long long getAccumulator(struct proc *p) {
     return p->accumulator;
@@ -318,6 +319,10 @@ exit(int status)
         wakeup1(initproc);
     }
   }
+  
+  if (p->state == RUNNING)
+      rpholder.remove(p);
+  
   // Update process status 
   curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
@@ -448,24 +453,23 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
     
     if(!rrq.isEmpty()){
-        p = rrq.dequeue();
+            p = rrq.dequeue();
 
-        // Switch to chosen process.  It is the process's job
-        // to release ptable.lock and then reacquire it
-        // before jumping back to us.
-        c->proc = p;
-        switchuvm(p);
-        p->state = RUNNING;
-        
-        rpholder.remove(p);
-        rpholder.add(p);
-
-        swtch(&(c->scheduler), p->context);
-        switchkvm();
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = p;
+            switchuvm(p);
+            p->state = RUNNING;
+            
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
+            
+            rpholder.remove(p);
+            rpholder.add(p);
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -478,6 +482,7 @@ priorityScheduler(struct proc *p, struct cpu *c)
     
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
+
 
     if(!pq.isEmpty()){
         p = pq.extractMin();
@@ -512,38 +517,37 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
 
     if(!pq.isEmpty()){
-        //time_t curTime = time(0);
-        struct proc *np = p;
-        if (avoidStarv){
-            double max = 0;
-            for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                    /*if(difftime(curTime,p->timeStamp) > max)*/
-                    if (tqCounter - p->timeStamp > max)
-                            np = p;
+            //time_t curTime = time(0);
+            struct proc *np = p;
+            if (avoidStarv){
+                double max = 0;
+                for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+                        /*if(difftime(curTime,p->timeStamp) > max)*/
+                        if (tqCounter - p->timeStamp > max)
+                                np = p;
+                }
+                avoidStarv = 0;
+                if (!pq.extractProc(np))
+                        return;
+            } else{
+                np = pq.extractMin();
             }
-            avoidStarv = 0;
-            if (!pq.extractProc(np))
-                    return;
-        } else{
-            np = pq.extractMin();
-        }
 
-        // Switch to chosen process.  It is the process's job
-        // to release ptable.lock and then reacquire it
-        // before jumping back to us.
-        c->proc = np;
-        switchuvm(np);
-        np->state = RUNNING;
-        
-        rpholder.remove(np);
-        rpholder.add(np);
+            // Switch to chosen process.  It is the process's job
+            // to release ptable.lock and then reacquire it
+            // before jumping back to us.
+            c->proc = np;
+            switchuvm(np);
+            np->state = RUNNING;
+            rpholder.remove(np);
+            rpholder.add(np);
 
-        swtch(&(c->scheduler), np->context);
-        switchkvm();
+            swtch(&(c->scheduler), np->context);
+            switchkvm();
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
+            // Process is done running for now.
+            // It should have changed its p->state before coming back.
+            c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -579,13 +583,9 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
-  struct proc *p = myproc();
-  
-  tqCounter += 1;
-  p->timeStamp = tqCounter;
-  
-  if(p->state == RUNNING)
-      rpholder.remove(p);
+  p = myproc();
+  if(p->state == RUNNING || POLICY == 1 )
+    rpholder.remove(p);
   p->state = RUNNABLE;
   
   if(POLICY == 1){
@@ -652,7 +652,7 @@ sleep(void *chan, struct spinlock *lk)
   if(p->state == RUNNING)
       rpholder.remove(p);
   p->state = SLEEPING;
-  
+
   sched();
 
   // Tidy up.

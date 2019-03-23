@@ -1,0 +1,23 @@
+$ opening path
+writing to path
+closing path file
+creating /bin/ path
+creating /hello path
+creating /hello/world path
+creating /hello/world/path path
+creating /under path
+creating /under/world path
+creating /under/world/path path
+creating /notIn path
+creating /notIn/path path
+exiting
+$ Hello World XV6
+$ linking helloWorld in /notIn/path
+removing helloWorld from root
+$ exec: fail
+exec: fail
+exec: fail
+exec: fail
+exec helloW failed
+$ linking helloWorld in bin
+7777	 77777777	7777d 7777                        77777777 7777
