@@ -790,29 +790,26 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
-    //cprintf("POLICY = %d\n", POLICY);
+    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
             pq.switchToRoundRobinPolicy();
             p->accumulator = 0;
         }
-        else if(policy_id == 2){ 
+        if(policy_id == 2){ 
             if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
                 if(p->priority == 0) 
                     p->priority = 1;
             }
-            else if(POLICY == 1){ /*change from Priority scheduling to Round Robin policy*/
+            if(POLICY == 1){ /*change from Round Robin to Priority scheduling policy*/
                 rrq.switchToPriorityQueuePolicy();
             }
-            else
-                break;
         }
-        else if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
+        if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
             pq.switchToRoundRobinPolicy();
         }
-        else
-            break;
         POLICY = policy_id;
+		cprintf("POLICY = %d\n", POLICY);
     }
     release(&ptable.lock);
 }
