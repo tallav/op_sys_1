@@ -130,6 +130,7 @@ int             wait_stat(int*, struct perf*);
 void            originalScheduler(struct proc*, struct cpu*);
 void            roundRobinScheduler(struct proc*, struct cpu*);
 void            priorityScheduler(struct proc*, struct cpu*);
+void            extendedPriorityScheduler(struct proc*, struct cpu*);
 void            setAccumulator(struct proc* p);
 void 			updatePerformance();
 
