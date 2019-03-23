@@ -14,7 +14,7 @@ main(int argc, char **argv)
 		int second_status;
 		int third_status;
 		pid = fork(); 
-		if(pid > 0) {
+		if(pid == 0) {
 			first_status = detach(pid); // status = 0
 			printf(1, "first_status: %d\n", first_status);
 			second_status = detach(pid); // status = -1, because this process has already detached this child, and it doesn’t have this child anymore.
