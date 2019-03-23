@@ -622,7 +622,7 @@ createdelete(void)
   for(pi = 0; pi < 4; pi++){
     wait(0);
   }
-  printf(1, "after wait\n");
+  
   name[0] = name[1] = name[2] = 0;
   for(i = 0; i < N; i++){
     for(pi = 0; pi < 4; pi++){
