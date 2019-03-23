@@ -6,16 +6,11 @@ int
 main(void)
 {
     int pid;
-    int status;
-
     pid = fork(); 
     if(pid == 0){ /*child code*/
-        policy(0);
-        policy(2);
+        ls();
     }else{ /*parent code*/
-        policy(3);
+        wait(0);
     }
-    wait(&status);
-    
     exit(0);
 }
