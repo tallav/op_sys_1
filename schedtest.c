@@ -1,4 +1,3 @@
-// Shell.
 #include "types.h"
 #include "user.h"
 #include "fcntl.h"
@@ -17,6 +16,6 @@ main(void)
         policy(3);
     }
     wait(&status);
-        
+    
     exit(0);
 }

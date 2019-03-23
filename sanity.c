@@ -1,4 +1,3 @@
-// Shell.
 #include "types.h"
 #include "user.h"
 #include "fcntl.h"
@@ -6,8 +5,7 @@
 int
 main(void)
 {
-        
-        int pid;
+    int pid;
 	int status;
 	int first_status;
 	int second_status;
@@ -23,17 +21,17 @@ main(void)
 		printf(1, "third_status: %d\n", third_status);
 	}
 	wait(&status);
-        
-        int pid2 = fork();
-        if (pid2 == 0) {
-            sleep(100);
-            exit(5);
-        }
-        else {
-            int status2;
-            wait(&status2);
-            printf(1, "exit status after is %d\n", status2);
-        }
-        
+
+	int pid2 = fork();
+	if (pid2 == 0) {
+		sleep(100);
+		exit(5);
+	}
+	else {
+		int status2;
+		wait(&status2);
+		printf(1, "exit status after is %d\n", status2);
+	}
+
 	exit(0);
 }
