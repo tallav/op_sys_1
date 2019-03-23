@@ -1,0 +1,9 @@
+
+policy 1
+echo "policy 1"
+policy 3
+echo "policy 3"
+policy 2
+echo "policy 2"
+    
+quitXV6

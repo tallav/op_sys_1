@@ -13,8 +13,9 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter = 0; /*Time Quantums counter*/
-int POLICY = 1;
+int POLICY = 3;
 int avoidStarv = 0; 
+
 
 long long getAccumulator(struct proc *p) {
         return p->accumulator;
@@ -318,6 +319,10 @@ exit(int status)
         wakeup1(initproc);
     }
   }
+  
+  if (p->state == RUNNING)
+      rpholder.remove(p);
+  
   // Update process status 
   curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
@@ -451,6 +456,7 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
     
 	if(!rrq.isEmpty()){
+                //cprintf("rrq is not empty");
 		p = rrq.dequeue();
 
 		// Switch to chosen process.  It is the process's job
@@ -463,11 +469,11 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
 		//p->performanceUtil.startRu = currTicks;
 		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
 		//release(&tickslock);
-		rpholder.add(p);
-
 		swtch(&(c->scheduler), p->context);
 		switchkvm();
-
+                
+                rpholder.remove(p);
+                rpholder.add(p);
 		// Process is done running for now.
 		// It should have changed its p->state before coming back.
 		c->proc = 0;
@@ -497,6 +503,7 @@ priorityScheduler(struct proc *p, struct cpu *c)
 		//p->performance.retime += currTicks - p->performanceUtil.startRe; 
 		//p->performanceUtil.startRu = currTicks;
 		//release(&tickslock); 
+                rpholder.remove(p);
 		rpholder.add(p);
 
 		swtch(&(c->scheduler), p->context);
@@ -545,6 +552,7 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 		c->proc = np;
 		switchuvm(np);
 		np->state = RUNNING;
+                rpholder.remove(np);
 		rpholder.add(np);
 
 		swtch(&(c->scheduler), np->context);
@@ -591,8 +599,8 @@ yield(void)
   
   acquire(&ptable.lock);  //DOC: yieldlock
   p = myproc();
-  if(p->state == RUNNING)
-      rpholder.remove(p);
+  if(p->state == RUNNING || POLICY == 1 )
+    rpholder.remove(p);
   p->state = RUNNABLE;
 
   tqCounter += 1;
@@ -602,12 +610,12 @@ yield(void)
   //release(&tickslock);
 
   if(POLICY == 1){
-      rpholder.remove(p);
+     // rpholder.remove(p);
       rrq.enqueue(p);
   }
   else{
       pq.put(p);
-      rpholder.remove(p);
+      //rpholder.remove(p);
       p->accumulator += p->priority;
       if (POLICY == 3 && (tqCounter % 100 == 0)){
          avoidStarv = 1;
@@ -665,6 +673,9 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+  
+  rpholder.remove(p);
+  
   //acquire(&tickslock); 
   //p->performanceUtil.startSt = currTicks;  
   //release(&tickslock);

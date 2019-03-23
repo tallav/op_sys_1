@@ -1,0 +1,24 @@
+$ Initiating scheduling test, test should take approximately 10000 time quantums !!!
+ctime test 1 ok
+ctime test 2 ok
+ctime test 3 ok
+ctime test 4 ok
+ctime test 5 ok
+stime test 1 ok
+stime test 2 ok
+stime test 3 ok
+stime test 4 ok
+stime test 5 ok
+rutime test 1 ok
+rutime test 2 ok
+rutime test 3 ok
+rutime test 4 ok
+rutime test 5 ok
+ttime test 1 ok
+ttime test 2 ok
+ttime test 3 ok
+ttime test 4 ok
+ttime test 5 ok
+ttime test 6 ok
+ttime test 7 ok
+$ $ Finished Yehonatan Peleg Test, quiting...
