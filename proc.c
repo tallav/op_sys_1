@@ -13,7 +13,8 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int tqCounter = 0; /*Time Quantums counter*/
-int POLICY;
+int POLICY = 1;
+int avoidStarv = 0; 
 
 long long getAccumulator(struct proc *p) {
         return p->accumulator;
@@ -402,7 +403,7 @@ scheduler(void)
 			priorityScheduler(p, c);
 			break;
 		case 3: /*Extended Priority Scheduling*/
-			extendedPriorityScheduler(p, c);
+                        extendedPriorityScheduler(p, c);
 			break;
 		default: /*Round Robin*/
 			roundRobinScheduler(p, c);
@@ -520,16 +521,19 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 	if(!pq.isEmpty()){
 		//time_t curTime = time(0);
 		struct proc *np = p;
-		double max = 0;
-		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-			/*if(difftime(curTime,p->timeStamp) > max)*/
-			if (tqCounter - p->timeStamp > max)
-				np = p;
-		}
-		
-		if (!pq.extractProc(np))
-			return;
-		   
+                if (avoidStarv){
+                    double max = 0;
+                    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
+                            /*if(difftime(curTime,p->timeStamp) > max)*/
+                            if (tqCounter - p->timeStamp > max)
+                                    np = p;
+                    }
+                    avoidStarv = 0;
+                    if (!pq.extractProc(np))
+                            return;
+                } else{
+                    np = pq.extractMin();
+                }
 		//acquire(&tickslock);
 		//np->performance.retime += currTicks - p->performanceUtil.startRe; 
 		//np->performanceUtil.startRu = currTicks;
@@ -538,12 +542,12 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 		// Switch to chosen process.  It is the process's job
 		// to release ptable.lock and then reacquire it
 		// before jumping back to us.
-		c->proc = p;
-		switchuvm(p);
-		p->state = RUNNING;
-		rpholder.add(p);
+		c->proc = np;
+		switchuvm(np);
+		np->state = RUNNING;
+		rpholder.add(np);
 
-		swtch(&(c->scheduler), p->context);
+		swtch(&(c->scheduler), np->context);
 		switchkvm();
 
 		// Process is done running for now.
@@ -601,12 +605,12 @@ yield(void)
       rpholder.remove(p);
       rrq.enqueue(p);
   }
-  else if (POLICY == 2){
+  else{
       pq.put(p);
       rpholder.remove(p);
       p->accumulator += p->priority;
       if (POLICY == 3 && (tqCounter % 100 == 0)){
-          extendedPriorityScheduler(p, mycpu());
+         avoidStarv = 1;
           /*tqCounter = 0;*/
       }
   }
