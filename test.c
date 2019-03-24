@@ -75,10 +75,10 @@ int fib(int n) {
 
 
 boolean test_exit_wait() {
-    int status;
+    int nProcs = 10;
+    int pid, status;
     boolean result = true;
-    int pid;
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < nProcs; ++i) {
         pid = fork();
         if (pid > 0) {
             wait(&status);
@@ -120,14 +120,18 @@ boolean test_detach() {
 }
 
 boolean test_policy_helper(int *priority_mod, int policy) {
+
     int nProcs = 100;
+
     int pid, status;
     boolean result = true;
     for (int i = 0; i < nProcs; ++i) {
         pid = fork();
         if (pid < 0) {
             break;
-        } else if (pid == 0) {
+        } 
+        if (pid == 0) { 
+
             if (priority_mod) {
                 if ((i % *(priority_mod)) == 0 && policy == PRIORITY) {
                     priority(1);
@@ -145,11 +149,12 @@ boolean test_policy_helper(int *priority_mod, int policy) {
     }
     return result;
 
+
+
 }
 
 boolean test_round_robin_policy() {
     return test_policy_helper(null, null);
-
 }
 
 boolean test_priority_policy() {
@@ -236,17 +241,11 @@ boolean test_starvation_helper(int npolicy, int npriority) {
     return result;
 }
 
-/**
- * test the growth of accumulator
- */
 boolean test_accumulator() {
     return test_starvation_helper(PRIORITY, 2);
 }
 
-/** I hope this does test the case of
-   starvation in extended priority
-   (where the priority is 0)
-*/
+
 boolean test_starvation() {
     return test_starvation_helper(EXTENED_PRIORITY, 0);
 }

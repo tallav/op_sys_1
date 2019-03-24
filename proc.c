@@ -16,7 +16,6 @@ long long tqCounter = 0; /*Time Quantums counter*/
 int POLICY = 1;
 int avoidStarv = 0; 
 
-
 long long getAccumulator(struct proc *p) {
     return p->accumulator;
 }
@@ -176,8 +175,8 @@ userinit(void)
   else
       pq.put(p);
   
-  p->priority = 5;
-  setAccumulator(p);
+  p->priority = 5; // Set the priority of new process to 5
+  setAccumulator(p); 
   
   release(&ptable.lock);
 }
@@ -269,20 +268,22 @@ void setAccumulator(struct proc *p){
   long long acc2; 
 
   if (pq.getMinAccumulator(&acc1)){
-      if (rpholder.getMinAccumulator(&acc2))
-            if (acc1<acc2)
+      if (rpholder.getMinAccumulator(&acc2)){
+            if (acc1<acc2){
                    p->accumulator = acc1;
-              else
+            } else{
                    p->accumulator = acc2;
-      else
+            }
+      } else{
              p->accumulator = acc1;
+      }
   }
   else if (rpholder.getMinAccumulator(&acc2)){
         p->accumulator = acc2;
   }
-  else
+  else{
        p->accumulator = 0;
-
+  }
 }
 
 // Exit the current process.  Does not return.
@@ -594,11 +595,11 @@ yield(void)
   acquire(&ptable.lock);  //DOC: yieldlock
   struct proc *p = myproc();
   if(p->state == RUNNING){
-    p->timeStamp = tqCounter;   
     rpholder.remove(p);
   }
   p->state = RUNNABLE;
   tqCounter++;
+  p->timeStamp = tqCounter;
   
   if(POLICY == 1){
       rrq.enqueue(p);
@@ -606,9 +607,9 @@ yield(void)
   else{
       pq.put(p);
       p->accumulator += p->priority;
-      if (POLICY == 3 && (tqCounter % 100 == 0)){
+      /*if (POLICY == 3 && (tqCounter % 100 == 0)){
          avoidStarv = 1;
-      }
+      }*/
   }
   
   sched();
