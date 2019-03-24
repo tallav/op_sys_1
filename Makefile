@@ -199,8 +199,6 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_policy\
-	_sanity\
-	_usertests\
 	_test\
 
 

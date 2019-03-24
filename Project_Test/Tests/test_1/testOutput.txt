@@ -1,0 +1,21 @@
+nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
+balloc: first 590 blocks have been allocated
+balloc: write bitmap block at sector 58
+boot block is 456 bytes (max 510)
+ld: cannot find bio.o: No such file or directory
+ld: cannot find console.o: No such file or directory
+ld: cannot find exec.o: No such file or directory
+ld: cannot find file.o: No such file or directory
+ld: cannot find fs.o: No such file or directory
+ld: cannot find ide.o: No such file or directory
+ld: cannot find ioapic.o: No such file or directory
+ld: cannot find kalloc.o: No such file or directory
+ld: cannot find kbd.o: No such file or directory
+ld: cannot find lapic.o: No such file or directory
+ld: cannot find log.o: No such file or directory
+ld: cannot find main.o: No such file or directory
+ld: cannot find mp.o: No such file or directory
+ld: cannot find picirq.o: No such file or directory
+ld: cannot find pipe.o: No such file or directory
+Project_Test/Tests/test_1/Makefile:139: recipe for target 'kernel' failed
+make[1]: *** [kernel] Error 1

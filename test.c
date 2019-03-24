@@ -17,6 +17,7 @@ struct perf {
     int rutime;                    // The total time spent in the RUNNING state
 };
 
+
 typedef boolean (test_runner)();
 
 void run_test(test_runner *test, char *name) {
@@ -74,10 +75,10 @@ int fib(int n) {
 
 
 boolean test_exit_wait() {
-    int nProcs = 10;
-    int pid, status;
+    int status;
     boolean result = true;
-    for (int i = 0; i < nProcs; ++i) {
+    int pid;
+    for (int i = 0; i < 20; ++i) {
         pid = fork();
         if (pid > 0) {
             wait(&status);
@@ -119,15 +120,14 @@ boolean test_detach() {
 }
 
 boolean test_policy_helper(int *priority_mod, int policy) {
-    int nProcs = 10;
+    int nProcs = 100;
     int pid, status;
     boolean result = true;
     for (int i = 0; i < nProcs; ++i) {
         pid = fork();
         if (pid < 0) {
             break;
-        } 
-        if (pid == 0) { 
+        } else if (pid == 0) {
             if (priority_mod) {
                 if ((i % *(priority_mod)) == 0 && policy == PRIORITY) {
                     priority(1);
@@ -144,10 +144,12 @@ boolean test_policy_helper(int *priority_mod, int policy) {
         result = result && assert_equals(0, status, "round robin");
     }
     return result;
+
 }
 
 boolean test_round_robin_policy() {
     return test_policy_helper(null, null);
+
 }
 
 boolean test_priority_policy() {
@@ -175,7 +177,7 @@ boolean test_performance_helper(int *npriority) {
         wait_stat(&status1, &perf2);
         print_perf(&perf2);
     } else {
-        for (int a = 0; a < 100; ++a) {
+        for (int a = 0; a < 20; ++a) {
             int pid;
             struct perf perf1;
 
@@ -234,18 +236,17 @@ boolean test_starvation_helper(int npolicy, int npriority) {
     return result;
 }
 
-/*
- *test the growth of accumulator
+/**
+ * test the growth of accumulator
  */
 boolean test_accumulator() {
     return test_starvation_helper(PRIORITY, 2);
 }
 
-/*
- *I hope this does test the case of
- *starvation in extended priority
- *(where the priority is 0)
- */
+/** I hope this does test the case of
+   starvation in extended priority
+   (where the priority is 0)
+*/
 boolean test_starvation() {
     return test_starvation_helper(EXTENED_PRIORITY, 0);
 }

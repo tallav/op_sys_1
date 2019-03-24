@@ -1,0 +1,37 @@
+$ opening path
+writing to path
+closing path file
+creating /bin/ path
+creating /hello path
+creating /hello/world path
+creating /hello/world/path path
+creating /under path
+creating /under/world path
+creating /under/world/path path
+creating /notIn path
+creating /notIn/path path
+exiting
+$ Hello World XV6
+$ linking helloWorld in /notIn/path
+removing helloWorld from root
+$ exec: fail
+exec: fail
+exec: fail
+exec: fail
+exec helloW failed
+$ linking helloWorld in bin
+$ exec: fail
+exec: fail
+Hello World XV6
+$ removing helloWorld from bin
+$ exec: fail
+exec: fail
+exec: fail
+exec: fail
+exec helloW failed
+$ linking helloWorld in /hello/world/path/
+$ exec: fail
+exec: fail
+exec: fail
+Hello World XV6
+$ $ Finished Yehonatan Peleg Test, quiting...

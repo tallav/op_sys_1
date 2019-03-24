@@ -165,8 +165,9 @@ userinit(void)
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
 
-  if(p->state == RUNNING)
-      rpholder.remove(p);
+  //if(p->state == RUNNING)
+  //    rpholder.remove(p);
+
   p->state = RUNNABLE;
   p->timeStamp = tqCounter;
   if(POLICY == 1)
@@ -526,22 +527,23 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                 //cprintf("avoid starving method");
                 long long max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                        long long waitTime = tqCounter - p->timeStamp;
-                        if (waitTime > max){
-                                np = p;
-                                max = waitTime;
+                        /*if(difftime(curTime,p->timeStamp) > max)*/
+                        if (p->state == RUNNABLE){
+                            if (tqCounter - p->timeStamp > max){
+                                    np = p;
+                                    max = tqCounter - p->timeStamp;
+                            }
                         }
                 }
-                cprintf("max: %d\n", max);
-                avoidStarv = 0;
+                //cprintf("max: %d\n", max);
                 if (!pq.extractProc(np)){
                         release(&ptable.lock);
                         return;
                 }
+                 avoidStarv = 0;
             } else{
                 np = pq.extractMin();
             }
-
             // Switch to chosen process.  It is the process's job
             // to release ptable.lock and then reacquire it
             // before jumping back to us.
@@ -784,6 +786,7 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
+           
     
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
@@ -792,8 +795,9 @@ policy(int policy_id)
         }
         if(policy_id == 2){ 
             if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
-                if(p->priority == 0) 
+                if(p->priority == 0){ 
                     p->priority = 1;
+                }
             }
             if(POLICY == 1){ /*change from Round Robin to Priority scheduling policy*/
                 rrq.switchToPriorityQueuePolicy();
@@ -802,9 +806,8 @@ policy(int policy_id)
         if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
             pq.switchToRoundRobinPolicy();
         }
-        POLICY = policy_id;
     }
-    //cprintf("update POLICY to %d\n", POLICY);
+     POLICY = policy_id;
     release(&ptable.lock);
 }
 
@@ -845,18 +848,54 @@ procdump(void)
   }
 }
 
-// Return the pidof the terminated child process or -1 upon failure.
+// Return the pid of the terminated child process or -1 upon failure.
 int
 wait_stat(int* status, struct perf * performance){
-      struct proc *curproc = myproc();
-      
-      if (!curproc)
-          return -1;
-      
-      *performance = curproc->performance;
-      *status = curproc->exitStatus;
-      
-      return curproc->pid;
+      struct proc *p;
+  int havekids, pid;
+  struct proc *curproc = myproc();
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        // Return the terminated child exit status.
+        if(status != null){ 
+            *status = p->exitStatus;
+        }
+        // Return the terminated child performance.
+        if(performance != null){ 
+            *performance = p->performance;
+        }
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+  }
 }
 
 // increments performence to all proccesses that are running or sleeping
