@@ -1,3 +1,7 @@
 $ usertests starting
 arg test passed
 createdelete test
+createdelete ok
+linkunlink test
+linkunlink ok
+concreate test

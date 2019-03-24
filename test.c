@@ -8,7 +8,7 @@
 #define ROUND_ROBIN 1
 #define PRIORITY 2
 #define EXTENED_PRIORITY 3
-/*
+
 struct perf {
     int ctime;                     // Creation time
     int ttime;                     // Termination time
@@ -16,7 +16,6 @@ struct perf {
     int retime;                    // The total time spent in the RUNNABLE state
     int rutime;                    // The total time spent in the RUNNING state
 };
-*/
 
 typedef boolean (test_runner)();
 
@@ -282,7 +281,7 @@ int main(void) {
     run_test(&test_priority_policy, "priority policy");
     run_test(&test_extended_priority_policy, "extended priority policy");
     run_test(&test_accumulator, "accumulator");
-    //run_test(&test_starvation, "starvation");
+    run_test(&test_starvation, "starvation");
     run_test(&test_performance_round_robin, "performance round robin");
     run_test(&test_performance_priority, "performance priority");
     run_test(&test_performance_extended_priority, "performance extended priority");

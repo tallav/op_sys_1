@@ -1,3 +1,0 @@
-$ usertests starting
-arg test passed
-createdelete test
