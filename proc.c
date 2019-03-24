@@ -165,9 +165,10 @@ userinit(void)
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
 
-  //if(p->state == RUNNING)
-  //    rpholder.remove(p);
+  if(p->state == RUNNING)
+      rpholder.remove(p);
   p->state = RUNNABLE;
+  p->timeStamp = tqCounter;
   if(POLICY == 1)
       rrq.enqueue(p);
   else
@@ -244,9 +245,10 @@ fork(void)
   
   acquire(&ptable.lock);
   
-  //if(np->state == RUNNING)
-  //    rpholder.remove(np);
+  if(np->state == RUNNING)
+      rpholder.remove(np);
   np->state = RUNNABLE;
+  np->timeStamp = tqCounter;
   
   if(POLICY == 1)
       rrq.enqueue(np);
@@ -254,7 +256,6 @@ fork(void)
       pq.put(np);
   
   np->priority = 5; // Set the priority of new process to 5
-
   setAccumulator(np);
 
   release(&ptable.lock);
@@ -323,9 +324,6 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-  
-  if (p->state == RUNNING)
-      rpholder.remove(p);
   
   // Update process status 
   curproc->exitStatus = status;
@@ -523,15 +521,18 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
     if(!pq.isEmpty()){
             //time_t curTime = time(0);
             struct proc *np = p;
-            if (avoidStarv){
+            //if (avoidStarv){
+            if(tqCounter % 100 == 0){
                 //cprintf("avoid starving method");
-                double max = 0;
+                long long max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                        /*if(difftime(curTime,p->timeStamp) > max)*/
-                        if (tqCounter - p->timeStamp > max){
+                        long long waitTime = tqCounter - p->timeStamp;
+                        if (waitTime > max){
                                 np = p;
+                                max = waitTime;
                         }
                 }
+                cprintf("max: %d\n", max);
                 avoidStarv = 0;
                 if (!pq.extractProc(np)){
                         release(&ptable.lock);
@@ -687,6 +688,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){ 
       p->state = RUNNABLE;
+      p->timeStamp = tqCounter;
       setAccumulator(p);  
       if(POLICY == 1)
         rrq.enqueue(p);
@@ -719,6 +721,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        p->timeStamp = tqCounter;
         setAccumulator(p);  
         if(POLICY == 1)
             rrq.enqueue(p);

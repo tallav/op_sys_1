@@ -1,6 +1,1 @@
-<<<<<<< HEAD
 $ Initiating scheduling test, test should take approximately 15000 time quantums !!!
-=======
-$ Initiating scheduling test, test should take approximately 15000 time quantums !!!
-   77777777d7777	777777777777777	 7777   7                               77777777777777777777
->>>>>>> dbd8252beb93e212a33b7488239c12bbe511e51a
