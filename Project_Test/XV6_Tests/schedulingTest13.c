@@ -11,6 +11,16 @@
 #define DEBUG 0
 #define NUM_OF_CHILDS 7
 
+
+
+struct perf {
+    int ctime;
+    int ttime;
+    int stime;
+    int retime;
+    int rutime;
+};
+
 int executeForever(int timeToSleep,int isDetach,char* debugString);
 int executeTimes(int timeToSleep,int numberOfLoops,int isDetach,char* debugString);
 void retrieveNextChildPerf();

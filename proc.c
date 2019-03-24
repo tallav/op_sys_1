@@ -168,11 +168,16 @@ userinit(void)
 
   //if(p->state == RUNNING)
   //    rpholder.remove(p);
+  
   p->state = RUNNABLE;
+  p->timeStamp = tqCounter;
   if(POLICY == 1)
       rrq.enqueue(p);
   else
       pq.put(p);
+  
+  p->priority = 5;
+  setAccumulator(p);
   
   release(&ptable.lock);
 }
@@ -319,9 +324,6 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-  
-  if (p->state == RUNNING)
-      rpholder.remove(p);
   
   // Update process status 
   curproc->exitStatus = status;
@@ -524,19 +526,22 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                 double max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
                         /*if(difftime(curTime,p->timeStamp) > max)*/
-                        if (tqCounter - p->timeStamp > max){
-                                np = p;
+                        if (p->state == RUNNABLE){
+                            if (tqCounter - p->timeStamp > max){
+                                    np = p;
+                                    max = tqCounter - p->timeStamp;
+                            }
                         }
                 }
-                avoidStarv = 0;
+                //cprintf("%d",max);
                 if (!pq.extractProc(np)){
                         release(&ptable.lock);
                         return;
                 }
+                 avoidStarv = 0;
             } else{
                 np = pq.extractMin();
             }
-
             // Switch to chosen process.  It is the process's job
             // to release ptable.lock and then reacquire it
             // before jumping back to us.
@@ -683,6 +688,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){ 
       p->state = RUNNABLE;
+      p->timeStamp = tqCounter;
       setAccumulator(p);  
       if(POLICY == 1)
         rrq.enqueue(p);
@@ -715,6 +721,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        p->timeStamp = tqCounter;
         setAccumulator(p);  
         if(POLICY == 1)
             rrq.enqueue(p);
@@ -777,6 +784,7 @@ policy(int policy_id)
     struct proc *p;
     
     acquire(&ptable.lock);
+           
     
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
@@ -785,8 +793,9 @@ policy(int policy_id)
         }
         if(policy_id == 2){ 
             if(POLICY == 3){ /*change from Extended Priority to Priority scheduling policy*/
-                if(p->priority == 0) 
+                if(p->priority == 0){ 
                     p->priority = 1;
+                }
             }
             if(POLICY == 1){ /*change from Round Robin to Priority scheduling policy*/
                 rrq.switchToPriorityQueuePolicy();
@@ -795,9 +804,8 @@ policy(int policy_id)
         if(policy_id == 3 && POLICY == 1){ /*change from Extended Priority to Round Robin policy*/
             pq.switchToRoundRobinPolicy();
         }
-        POLICY = policy_id;
     }
-    //cprintf("update POLICY to %d\n", POLICY);
+     POLICY = policy_id;
     release(&ptable.lock);
 }
 
@@ -838,7 +846,7 @@ procdump(void)
   }
 }
 
-// Return the pidof the terminated child process or -1 upon failure.
+// Return the pid of the terminated child process or -1 upon failure.
 int
 wait_stat(int* status, struct perf * performance){
       struct proc *curproc = myproc();
