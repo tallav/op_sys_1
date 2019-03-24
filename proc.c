@@ -12,8 +12,8 @@ extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
-int tqCounter = 0; /*Time Quantums counter*/
-int POLICY = 3;
+long long tqCounter = 0; /*Time Quantums counter*/
+int POLICY = 1;
 int avoidStarv = 0; 
 
 
@@ -520,7 +520,7 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
             //time_t curTime = time(0);
             struct proc *np = p;
             if (avoidStarv){
-                cprintf("avoid starving method");
+                //cprintf("avoid starving method");
                 double max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
                         /*if(difftime(curTime,p->timeStamp) > max)*/
@@ -587,10 +587,13 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
-  p = myproc();
-  if(p->state == RUNNING || POLICY == 1 )
+  struct proc *p = myproc();
+  if(p->state == RUNNING){
+    p->timeStamp = tqCounter;   
     rpholder.remove(p);
+  }
   p->state = RUNNABLE;
+  tqCounter++;
   
   if(POLICY == 1){
       rrq.enqueue(p);
@@ -794,7 +797,7 @@ policy(int policy_id)
         }
         POLICY = policy_id;
     }
-    cprintf("update POLICY to %d\n", POLICY);
+    //cprintf("update POLICY to %d\n", POLICY);
     release(&ptable.lock);
 }
 

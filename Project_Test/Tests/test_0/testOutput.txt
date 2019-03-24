@@ -1,15 +1,15 @@
 $ usertests starting
 arg test passed
 createdelete test
-avoid starving methodcreatedelete ok
+createdelete ok
 linkunlink test
-avoid starving methodlinkunlink ok
+linkunlink ok
 concreate test
-avoid starving methodavoid starving methodavoid starving methodavoid starving methodavoid starving methodconcreate ok
+concreate ok
 fourfiles test
-avoid starving methodfourfiles ok
+fourfiles ok
 sharedfd test
-avoid starving methodavoid starving methodavoid starving methodavoid starving methodsharedfd ok
+sharedfd ok
 bigarg test
 bigarg test ok
 bigwrite test
@@ -19,7 +19,7 @@ bigarg test ok
 bss test
 bss test ok
 sbrk test
-avoid starving methodpid 97 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80000000--kill proc
+pid 97 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80000000--kill proc
 pid 98 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x8000c350--kill proc
 pid 99 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x800186a0--kill proc
 pid 100 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x800249f0--kill proc
@@ -44,7 +44,7 @@ pid 118 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80100590--kill proc
 pid 119 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x8010c8e0--kill proc
 pid 120 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80118c30--kill proc
 pid 121 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80124f80--kill proc
-avoid starving methodpid 122 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x801312d0--kill proc
+pid 122 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x801312d0--kill proc
 pid 123 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x8013d620--kill proc
 pid 124 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80149970--kill proc
 pid 125 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x80155cc0--kill proc
@@ -61,7 +61,7 @@ pid 135 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x801cfde0--kill proc
 pid 136 usertests: trap 14 err 5 on cpu 1 eip 0x37b9 addr 0x801dc130--kill proc
 allocuvm out of memory
 allocuvm out of memory
-avoid starving methodallocuvm out of memory
+allocuvm out of memory
 allocuvm out of memory
 allocuvm out of memory
 allocuvm out of memory
@@ -69,7 +69,7 @@ allocuvm out of memory
 allocuvm out of memory
 sbrk test OK
 validate test
-avoid starving methodavoid starving methodavoid starving methodvalidate ok
+validate ok
 open test
 open test ok
 small file test
@@ -79,5 +79,44 @@ open small succeeded ok
 read succeeded ok
 small file test ok
 big files test
-lapicid 1: panic: balloc: out of blocks
- 801011d4 8010136a 80101b6f 801010c2 80106342 80105fb9 801070dd 80106edc 0 0
+big files ok
+many creates, followed by unlink test
+many creates, followed by unlink; ok
+openiput test
+openiput test ok
+exitiput test
+exitiput test ok
+iput test
+iput test ok
+mem test
+allocuvm out of memory
+mem ok
+pipe1 ok
+preempt: kill... wait... preempt ok
+exitwait ok
+rmdot test
+rmdot ok
+fourteen test
+fourteen ok
+bigfile test
+bigfile test ok
+subdir test
+subdir ok
+linktest
+linktest ok
+unlinkread test
+unlinkread ok
+dir vs file
+dir vs file OK
+empty file name
+empty file name OK
+fork test
+fork test OK
+bigdir test
+bigdir ok
+uio test
+pid 591 usertests: trap 13 err 0 on cpu 1 eip 0x3d40 addr 0x801dc130--kill proc
+uio test done
+exec test
+ALL TESTS PASSED
+$ $ Finished Yehonatan Peleg Test, quiting...
