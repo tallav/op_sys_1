@@ -183,7 +183,9 @@ mkfs: mkfs.c fs.h
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
-UPROGS=  _quitXV6\
+UPROGS=  _exitWait\
+_detachTest\
+_quitXV6\
 	_cat\
 	_echo\
 	_forktest\
@@ -199,13 +201,7 @@ UPROGS=  _quitXV6\
 	_wc\
 	_zombie\
 	_policy\
-<<<<<<< HEAD
-	_sanity\
-	_test\
-	_usertests\
-=======
 
->>>>>>> dbd8252beb93e212a33b7488239c12bbe511e51a
 
 fs.img: mkfs README path $(UPROGS)
 	./mkfs fs.img README path $(UPROGS)
@@ -310,6 +306,18 @@ tar:
 	(cd /tmp; tar cf - xv6) | gzip >xv6-rev10.tar.gz  # the next one will be 10 (9/17)
 
 .PHONY: dist-test dist
+_exitWait: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o exitWait.o ./Project_Test/XV6_Tests/exitWait.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _exitWait exitWait.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _exitWait > exitWait.asm
+	$(OBJDUMP) -t _exitWait | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > exitWait.sym
+
+_detachTest: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o detachTest.o ./Project_Test/XV6_Tests/detachTest.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _detachTest detachTest.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _detachTest > detachTest.asm
+	$(OBJDUMP) -t _detachTest | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > detachTest.sym
+
 _quitXV6: ulib.o usys.o printf.o umalloc.o
 	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o quitXV6.o ./Project_Test/XV6_Tests/quitXV6.c
 	ld -m    elf_i386 -N -e main -Ttext 0 -o _quitXV6 quitXV6.o ulib.o usys.o printf.o umalloc.o

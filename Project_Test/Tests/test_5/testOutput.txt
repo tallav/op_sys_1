@@ -1,0 +1,29 @@
+$ Calling priority system call with correct args
+Calling priority system call with correct args
+Calling priority system call with correct args
+Calling priority system call with correct args
+Calling priority system call with correct args
+Calling priority system call with correct args
+Calling priority system call with wrong args
+Calling priority system call with wrong args
+Calling priority system call with wrong args
+$ Calling priority system call with correct args
+Calling policy system call
+Calling priority system call with correct args
+Calling policy system call
+Calling priority system call with correct args
+Calling policy system call
+Calling priority system call with correct args
+Calling policy system call
+Calling priority system call with correct args
+Calling policy system call
+Calling priority system call with correct args
+Calling policy system call
+Calling policy system call
+Calling priority system call with correct args
+Calling priority system call with wrong args
+Calling policy system call
+Calling priority system call with wrong args
+Calling policy system call
+Calling priority system call with wrong args
+$ $ Finished Yehonatan Peleg Test, quiting...

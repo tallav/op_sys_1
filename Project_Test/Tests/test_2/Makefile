@@ -183,7 +183,13 @@ mkfs: mkfs.c fs.h
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
-UPROGS=  _quitXV6\
+UPROGS=  _helloW\
+_pathTest\
+_pathTest1\
+_quitXV6\
+_pathTest2.1\
+_pathTest2.2\
+_pathTest3\
 	_cat\
 	_echo\
 	_forktest\
@@ -199,13 +205,7 @@ UPROGS=  _quitXV6\
 	_wc\
 	_zombie\
 	_policy\
-<<<<<<< HEAD
-	_sanity\
-	_test\
-	_usertests\
-=======
 
->>>>>>> dbd8252beb93e212a33b7488239c12bbe511e51a
 
 fs.img: mkfs README path $(UPROGS)
 	./mkfs fs.img README path $(UPROGS)
@@ -310,9 +310,45 @@ tar:
 	(cd /tmp; tar cf - xv6) | gzip >xv6-rev10.tar.gz  # the next one will be 10 (9/17)
 
 .PHONY: dist-test dist
+_helloW: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o helloW.o ./Project_Test/XV6_Tests/helloW.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _helloW helloW.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _helloW > helloW.asm
+	$(OBJDUMP) -t _helloW | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > helloW.sym
+
+_pathTest: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o pathTest.o ./Project_Test/XV6_Tests/pathTest.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _pathTest pathTest.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _pathTest > pathTest.asm
+	$(OBJDUMP) -t _pathTest | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > pathTest.sym
+
+_pathTest1: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o pathTest1.o ./Project_Test/XV6_Tests/pathTest1.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _pathTest1 pathTest1.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _pathTest1 > pathTest1.asm
+	$(OBJDUMP) -t _pathTest1 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > pathTest1.sym
+
 _quitXV6: ulib.o usys.o printf.o umalloc.o
 	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o quitXV6.o ./Project_Test/XV6_Tests/quitXV6.c
 	ld -m    elf_i386 -N -e main -Ttext 0 -o _quitXV6 quitXV6.o ulib.o usys.o printf.o umalloc.o
 	objdump -S _quitXV6 > quitXV6.asm
 	$(OBJDUMP) -t _quitXV6 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > quitXV6.sym
+
+_pathTest2.1: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o pathTest2.1.o ./Project_Test/XV6_Tests/pathTest2.1.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _pathTest2.1 pathTest2.1.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _pathTest2.1 > pathTest2.1.asm
+	$(OBJDUMP) -t _pathTest2.1 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > pathTest2.1.sym
+
+_pathTest2.2: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o pathTest2.2.o ./Project_Test/XV6_Tests/pathTest2.2.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _pathTest2.2 pathTest2.2.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _pathTest2.2 > pathTest2.2.asm
+	$(OBJDUMP) -t _pathTest2.2 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > pathTest2.2.sym
+
+_pathTest3: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o pathTest3.o ./Project_Test/XV6_Tests/pathTest3.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _pathTest3 pathTest3.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _pathTest3 > pathTest3.asm
+	$(OBJDUMP) -t _pathTest3 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > pathTest3.sym
 

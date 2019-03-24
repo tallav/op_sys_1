@@ -200,9 +200,13 @@ _quitXV6\
 	_wc\
 	_zombie\
 	_policy\
+<<<<<<< HEAD
 	_sanity\
 	_test\
 	_usertests\
+=======
+
+>>>>>>> dbd8252beb93e212a33b7488239c12bbe511e51a
 
 fs.img: mkfs README path $(UPROGS)
 	./mkfs fs.img README path $(UPROGS)

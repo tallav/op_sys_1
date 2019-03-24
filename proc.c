@@ -14,8 +14,7 @@ extern RunningProcessesHolder rpholder;
 
 long long tqCounter = 0; /*Time Quantums counter*/
 int POLICY = 1;
-//int avoidStarv = 0; 
-
+int avoidStarv = 0; 
 
 long long getAccumulator(struct proc *p) {
     return p->accumulator;
@@ -498,7 +497,7 @@ priorityScheduler(struct proc *p, struct cpu *c)
         c->proc = p;
         switchuvm(p);
         p->state = RUNNING; 
-        
+
         rpholder.remove(p);
         rpholder.add(p);
 
@@ -524,18 +523,19 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
     if(!pq.isEmpty()){
             //time_t curTime = time(0);
             struct proc *np = p;
-            //if (avoidStarv){
-            if(tqCounter % 100 == 0){
-                long long max = 0;
+            if (avoidStarv){
+                //cprintf("avoid starving method");
+                double max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
                         /*if(difftime(curTime,p->timeStamp) > max)*/
-                        if (tqCounter - p->timeStamp > max)
+                        if (tqCounter - p->timeStamp > max){
                                 np = p;
+                        }
                 }
-                //avoidStarv = 0;
+                avoidStarv = 0;
                 if (!pq.extractProc(np)){
-                    release(&ptable.lock);
-                    return;
+                        release(&ptable.lock);
+                        return;
                 }
             } else{
                 np = pq.extractMin();
@@ -590,13 +590,12 @@ sched(void)
 void
 yield(void)
 {
-  struct proc *p;
   acquire(&ptable.lock);  //DOC: yieldlock
-  p = myproc();
-  if(p->state == RUNNING)
+  struct proc *p = myproc();
+  if(p->state == RUNNING){
     rpholder.remove(p);
+  }
   p->state = RUNNABLE;
-  
   tqCounter++;
   p->timeStamp = tqCounter;
   
