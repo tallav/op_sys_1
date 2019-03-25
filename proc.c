@@ -520,14 +520,11 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
 
     if(!pq.isEmpty()){
-            //time_t curTime = time(0);
             struct proc *np = p;
-            //if (avoidStarv){
-            if(tqCounter % 100 == 0){
-                //cprintf("avoid starving method");
+            if (avoidStarv){
+            //if(tqCounter % 100 == 0){
                 long long max = 0;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                        /*if(difftime(curTime,p->timeStamp) > max)*/
                         if (p->state == RUNNABLE){
                             if (tqCounter - p->timeStamp > max){
                                     np = p;
@@ -535,12 +532,12 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                             }
                         }
                 }
-                //cprintf("max: %d\n", max);
+
                 if (!pq.extractProc(np)){
                         release(&ptable.lock);
                         return;
                 }
-                 avoidStarv = 0;
+                avoidStarv = 0;
             } else{
                 np = pq.extractMin();
             }
@@ -608,9 +605,9 @@ yield(void)
   else{
       pq.put(p);
       p->accumulator += p->priority;
-      /*if (POLICY == 3 && (tqCounter % 100 == 0)){
+      if (POLICY == 3 && (tqCounter % 100 == 0)){
          avoidStarv = 1;
-      }*/
+      }
   }
   
   sched();

@@ -251,6 +251,9 @@ boolean test_starvation() {
     return test_starvation_helper(EXTENED_PRIORITY, 0);
 }
 
+boolean test_starvation_2() {
+    return test_starvation_helper(PRIORITY, 2);
+}
 
 boolean test_performance_round_robin() {
     return test_performance_helper(null);
@@ -283,6 +286,7 @@ int main(void) {
     run_test(&test_extended_priority_policy, "extended priority policy");
     run_test(&test_accumulator, "accumulator");
     run_test(&test_starvation, "starvation");
+    //run_test(&test_starvation_2, "starvation - policy 2");
     run_test(&test_performance_round_robin, "performance round robin");
     run_test(&test_performance_priority, "performance priority");
     run_test(&test_performance_extended_priority, "performance extended priority");
