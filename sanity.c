@@ -1,10 +1,9 @@
-// Shell.
 #include "types.h"
 #include "user.h"
 #include "fcntl.h"
 
-int
-main(int argc, char **argv)
+/*
+int main(int argc, char **argv)
 {
 	int pid;
 	int status;
@@ -52,11 +51,96 @@ main(int argc, char **argv)
 		
 	case 3:
 		pid = fork(); 
-		if(pid == 0){ /*child code*/
+		if(pid == 0){
 			printf(1, "child process\n");
-		}else{ /*parent code*/
+		}else{
 			wait(0);
 		}
 		exit(0);
 	}
+}
+*/
+
+struct perf {
+    int ctime;                     // Creation time
+    int ttime;                     // Termination time
+    int stime;                     // The total time spent in the SLEEPING state
+    int retime;                    // The total time spent in the RUNNABLE state
+    int rutime;                    // The total time spent in the RUNNING state
+};
+
+void testExitWait(){
+    printf(1, "----------test exit wait started\n");
+    int status;
+    int pid;
+    for (int i = 0; i < 10; i++) {
+        pid = fork();
+        if (pid > 0) {
+            wait(&status);
+            printf(1, "process with pid %d exited with status %d\n", pid, status);
+        } else {
+            sleep(5);
+            exit(i);
+        }
+    }
+    printf(1, "----------test exit wait ended\n");
+}
+
+void testDetach(){
+    printf(1, "----------test detach started\n");
+    int pid;
+    int first_status;
+    int second_status;
+    int third_status;
+    
+    pid = fork(); 
+    if(pid > 0) {
+        first_status = detach(pid); // status = 0
+        printf(1, "first_status: %d\n", first_status);
+        second_status = detach(pid); // status = -1, because this process has already detached this child, and it doesn’t have this child anymore.
+        printf(1, "second_status: %d\n", second_status);
+        third_status = detach(77); // status = -1, because this process doesn’t have a child with this pid.
+        printf(1, "third_status: %d\n", third_status);
+    }
+    printf(1, "----------test detach ended\n");
+}
+
+void printPerf(struct perf *performance) {
+    printf(1, "pref:\n");
+    printf(1, "\tctime: %d\n", performance->ctime);
+    printf(1, "\tttime: %d\n", performance->ttime);
+    printf(1, "\tstime: %d\n", performance->stime);
+    printf(1, "\tretime: %d\n", performance->retime);
+    printf(1, "\trutime: %d\n", performance->rutime);
+    printf(1, "\n\tTurnaround time: %d\n", (performance->ttime - performance->ctime));
+}
+
+void testWaitStat(){
+    printf(1, "----------test wait_stat started\n");
+    int status;
+    struct perf perf;
+    int pid;
+    for (int i = 0; i < 10; i++) {
+        pid = fork();
+        printf(1, "%d\n", pid);
+        if (pid > 0) {
+            wait_stat(&status, &perf);
+            printf(1, "process with pid %d exited with status %d\n", pid, status);
+        } else {
+            sleep(5);
+            exit(i);
+        }
+    }
+    printf(1, "----------test wait_stat ended\n");
+}
+
+int main(int argc, char **argv){
+    
+    
+    testWaitStat();
+    testExitWait();
+    testDetach();
+    
+    
+    exit(0);
 }

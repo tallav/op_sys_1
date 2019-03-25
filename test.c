@@ -177,7 +177,7 @@ boolean test_performance_helper(int *npriority) {
         wait_stat(&status1, &perf2);
         print_perf(&perf2);
     } else {
-        for (int a = 0; a < 20; ++a) {
+        for (int a = 0; a < 100; ++a) {
             int pid;
             struct perf perf1;
 

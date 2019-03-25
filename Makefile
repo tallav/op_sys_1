@@ -200,6 +200,7 @@ UPROGS=\
 	_zombie\
 	_policy\
 	_test\
+	_sanity\
 
 
 fs.img: mkfs README path $(UPROGS)
