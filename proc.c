@@ -521,25 +521,29 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 
     if(!pq.isEmpty()){
             struct proc *np = p;
-            if (avoidStarv){
-            //if(tqCounter % 100 == 0){
+            if(avoidStarv){
                 long long max = 0;
+                //np = ptable.proc;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
                         if (p->state == RUNNABLE){
-                            if (tqCounter - p->timeStamp > max){
+                            if (tqCounter - p->timeStamp > max || np == null){
                                     np = p;
                                     max = tqCounter - p->timeStamp;
                             }
                         }
                 }
-
-                if (!pq.extractProc(np)){
-                        release(&ptable.lock);
-                        return;
-                }
+                //cprintf("max: %d\n", max);
                 avoidStarv = 0;
+                if (np != null){
+                    if (!pq.extractProc(np)){
+                            release(&ptable.lock);
+                           // procdump();
+                           // cprintf("couldnt find\n");
+                            return;
+                    }
+                }
             } else{
-                np = pq.extractMin();
+                    np = pq.extractMin();
             }
             // Switch to chosen process.  It is the process's job
             // to release ptable.lock and then reacquire it

@@ -106,7 +106,7 @@ void testDetach(){
 }
 
 void printPerf(struct perf *performance) {
-    printf(1, "perf:\n");
+    printf(1, "pref:\n");
     printf(1, "\tctime: %d\n", performance->ctime);
     printf(1, "\tttime: %d\n", performance->ttime);
     printf(1, "\tstime: %d\n", performance->stime);

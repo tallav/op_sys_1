@@ -183,7 +183,7 @@ mkfs: mkfs.c fs.h
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
-UPROGS=\
+UPROGS=  _quitXV6\
 	_cat\
 	_echo\
 	_forktest\
@@ -199,9 +199,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_policy\
-	_sanity\
 	_test\
-	_sanity\
 
 
 fs.img: mkfs README path $(UPROGS)
@@ -307,3 +305,9 @@ tar:
 	(cd /tmp; tar cf - xv6) | gzip >xv6-rev10.tar.gz  # the next one will be 10 (9/17)
 
 .PHONY: dist-test dist
+_quitXV6: ulib.o usys.o printf.o umalloc.o
+	gcc -fno-pic -std=gnu99 -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer 	-fno-stack-protector -fno-pie -no-pie -fno-pic -static 	-fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -march=i686 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie  -c -o quitXV6.o ./Project_Test/XV6_Tests/quitXV6.c
+	ld -m    elf_i386 -N -e main -Ttext 0 -o _quitXV6 quitXV6.o ulib.o usys.o printf.o umalloc.o
+	objdump -S _quitXV6 > quitXV6.asm
+	$(OBJDUMP) -t _quitXV6 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > quitXV6.sym
+
