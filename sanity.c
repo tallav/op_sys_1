@@ -211,22 +211,22 @@ int main(int argc, char **argv){
 	
 	char* arg = argv[1];
 	switch(arg){
-		case exit:
+		case "exit":
 			testExitWait();
 			break;
-		case detach:
+		case "detach":
 			testDetach();
 			break;
-		case wait_stat:
+		case "wait_stat":
 			testWaitStat();
 			break;
-		case policy1:
+		case "policy1":
 			testPerf(1);
 			break;
-		case policy2:
+		case "policy2":
 			testPerf(2);
 			break;
-		case policy3:
+		case "policy3":
 			testPerf(3);
 			break;
 	}
