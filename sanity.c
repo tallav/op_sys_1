@@ -135,6 +135,29 @@ void testWaitStat(){
 }
 
 void testPolicy(int policyNum) {
+	int nProcs = 10;
+    int pid;
+	int status;
+    for (int i = 0; i < nProcs; i++) {
+        pid = fork();
+        if (pid < 0) {
+			printf(1, "fork failed\n");
+            break;
+        } else if (pid == 0) {
+			int pr = i % 10;
+			if(pr == 0 && policyNum != 3)
+				pr = 1;
+			priority(pr);
+            sleep(10);
+            exit(0);
+        }
+    }
+    for (int j = 0; j < nProcs; j++) {
+        wait(&status);
+    }
+}
+	
+testPref(int policyNum){	
     policy(policyNum);
     int nProcs = 100;
     int pid;
@@ -159,12 +182,13 @@ void testPolicy(int policyNum) {
     }
 }
 
+
+
 int main(int argc, char **argv){
     
     testExitWait();
     testDetach();
-    //testWaitStat();
-    sleep(100);
+    testWaitStat();
     printf(1, "----------test policy 1 started\n");
     testPolicy(1);
     printf(1, "----------test policy 2 started\n");
