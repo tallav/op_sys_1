@@ -208,17 +208,17 @@ int main(int argc, char **argv){
 		exit(0);
 	}
 	char* arg = argv[1];
-	if(strcmp(arg, "exit"))
+	if(strcmp(arg, "exit") == 0)
 		testExitWait();
-	else if(strcmp(arg, "detach"))
+	else if(strcmp(arg, "detach") == 0)
 		testDetach();
-	else if(strcmp(arg, "wait_stat"))
+	else if(strcmp(arg, "wait_stat") == 0)
 		testWaitStat();
-	else if(strcmp(arg, "policy1"))
+	else if(strcmp(arg, "policy1") == 0)
 		testPerf(1);
-	else if(strcmp(arg, "policy2"))
+	else if(strcmp(arg, "policy2") == 0)
 		testPerf(2);
-	else if(strcmp(arg, "policy3"))
+	else if(strcmp(arg, "policy3") == 0)
 		testPerf(3);
 	else
 		exit(0);
