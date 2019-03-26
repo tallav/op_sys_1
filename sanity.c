@@ -203,33 +203,25 @@ void testPerf(int policyNum){
 }
 
 int main(int argc, char **argv){
-	
 	if(argc < 2){
 		printf(1, "argv missing\n");
 		exit(0);
 	}
-	
 	char* arg = argv[1];
-	switch(arg){
-		case "exit":
-			testExitWait();
-			break;
-		case "detach":
-			testDetach();
-			break;
-		case "wait_stat":
-			testWaitStat();
-			break;
-		case "policy1":
-			testPerf(1);
-			break;
-		case "policy2":
-			testPerf(2);
-			break;
-		case "policy3":
-			testPerf(3);
-			break;
-	}
+	if(arg == "exit")
+		testExitWait();
+	else if(arg == "detach")
+		testDetach();
+	else if(arg == "wait_stat")
+		testWaitStat();
+	else if(arg == "policy1")
+		testPerf(1);
+	else if(arg == "policy2")
+		testPerf(2);
+	else if(arg == "policy3")
+		testPerf(3);
+	else
+		exit(0);
 	/*
     printf(1, "----------test policy 1 started\n");
     testPolicy(1);
