@@ -127,7 +127,8 @@ void testWaitStat(){
         if (pid > 0) {
             wait_stat(&status, &perf);
             printf(1, "process with pid %d exited with status %d\n", pid, status);
-            //printPerf(&perf);
+			kill(pid);
+            printPerf(&perf);
         } else {
             sleep(5);
             exit(i);
@@ -137,6 +138,7 @@ void testWaitStat(){
 }
 
 void testPolicy(int policyNum) {
+	policy(policyNum);
 	int nProcs = 10;
     int pid;
 	int status;
@@ -153,6 +155,7 @@ void testPolicy(int policyNum) {
             sleep(10);
             exit(0);
         }
+		kill(pid);
     }
     for (int j = 0; j < nProcs; j++) {
         wait(&status);
@@ -161,30 +164,41 @@ void testPolicy(int policyNum) {
 	
 void testPref(int policyNum){	
     policy(policyNum);
-    int nProcs = 100;
-    int pid;
-    int status;
-    struct perf perf;
-    for (int i = 0; i < nProcs; i++) {
-        pid = fork();
-        if (pid < 0) {
-            printf(1, "fork failed\n");
-            break;
-        } else if (pid == 0) {
-            int pr = i % 10;
-            if(pr == 0 && policyNum == 2)
-                pr = 1;
-            priority(pr);
-            sleep(10);
-            exit(0);
+	int nProcs = 10;
+    int pid1;
+    struct perf perf1;
+    pid1 = fork();
+    if (pid1 > 0) {
+        int status1;
+        wait_stat(&status1, &perf1);
+        print_perf(&perf1);
+    } else {
+        for (int i = 0; i < nProcs; i++) {
+            int pid2;
+            struct perf perf2;
+            pid2 = fork();
+            if (pid2 > 0) {
+                int status2;
+                sleep(5);
+                wait_stat(&status2, &perf2);
+            } else {
+                int pr = i % 10;
+				if(pr == 0 && policyNum != 3)
+					pr = 1;
+				priority(pr);
+                int sum = 0;
+                for (int k = 0; k < 1000000; k++) {
+                    for (int j = 0; j < 1000000; j++) {
+                        sum++;
+                    }
+                }
+                sleep(5);
+                exit(0);
+            }
         }
-    }
-    for (int j = 0; j < nProcs; j++) {
-        wait_stat(&status, &perf);
+        exit(0);
     }
 }
-
-
 
 int main(int argc, char **argv){
     
