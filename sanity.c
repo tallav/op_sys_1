@@ -210,7 +210,7 @@ int main(int argc, char **argv){
 	}
 	
 	char* arg = argv[1];
-	switch arg{
+	switch(arg){
 		case exit:
 			testExitWait();
 			break;
