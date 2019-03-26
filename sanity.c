@@ -77,6 +77,7 @@ void testExitWait(){
         pid = fork();
         if (pid > 0) {
             wait(&status);
+			kill(pid);
             printf(1, "process with pid %d exited with status %d\n", pid, status);
         } else {
             sleep(5);
@@ -102,6 +103,7 @@ void testDetach(){
         third_status = detach(77); // status = -1, because this process doesn’t have a child with this pid.
         printf(1, "third_status: %d\n", third_status);
     }
+	kill(pid);
     printf(1, "----------test detach ended\n");
 }
 
