@@ -157,7 +157,7 @@ void testPolicy(int policyNum) {
     }
 }
 	
-testPref(int policyNum){	
+void testPref(int policyNum){	
     policy(policyNum);
     int nProcs = 100;
     int pid;
