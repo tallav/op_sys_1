@@ -162,7 +162,7 @@ void testPolicy(int policyNum) {
     }
 }
 	
-void testPref(int policyNum){	
+void testPerf(int policyNum){	
     policy(policyNum);
 	int nProcs = 10;
     int pid1;
@@ -213,6 +213,12 @@ int main(int argc, char **argv){
     testPolicy(2);
     printf(1, "----------test policy 3 started\n");
     testPolicy(3);
+	printf(1, "----------performance policy 1 started\n");
+    testPerf(1);
+    printf(1, "----------performance policy 2 started\n");
+    testPerf(2);
+    printf(1, "----------performance policy 3 started\n");
+    testPerf(3);
     
     exit(0);
 }
