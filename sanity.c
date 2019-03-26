@@ -171,7 +171,8 @@ void testPref(int policyNum){
     if (pid1 > 0) {
         int status1;
         wait_stat(&status1, &perf1);
-        print_perf(&perf1);
+        printPerf(&perf1);
+		kill(pid1);
     } else {
         for (int i = 0; i < nProcs; i++) {
             int pid2;
@@ -181,6 +182,7 @@ void testPref(int policyNum){
                 int status2;
                 sleep(5);
                 wait_stat(&status2, &perf2);
+				kill(pid2);
             } else {
                 int pr = i % 10;
 				if(pr == 0 && policyNum != 3)
