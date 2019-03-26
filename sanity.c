@@ -219,6 +219,12 @@ int main(int argc, char **argv){
     testPerf(2);
     printf(1, "----------performance policy 3 started\n");
     testPerf(3);
+	printf(1, "----------performance policy 3 started\n");
+    testPerf(3);
+    printf(1, "----------performance policy 2 started\n");
+    testPerf(2);
+    printf(1, "----------performance policy 1 started\n");
+    testPerf(1);
     
     exit(0);
 }
