@@ -125,7 +125,7 @@ void testWaitStat(){
         if (pid > 0) {
             wait_stat(&status, &perf);
             printf(1, "process with pid %d exited with status %d\n", pid, status);
-            printPerf(&perf);
+            //printPerf(&perf);
         } else {
             sleep(5);
             exit(i);
