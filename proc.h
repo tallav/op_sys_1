@@ -64,7 +64,7 @@ struct proc {
   int exitStatus;
   int priority;                  // Process priority
   long long accumulator;         // Process accumulator
-  long long timeStamp;                 
+  long long timeStamp; 
   struct perf performance;
 };
 

@@ -239,10 +239,6 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
-
-  acquire(&tickslock);
-  np->performance.ctime = ticks;
-  release(&tickslock);
   
   acquire(&ptable.lock);
   
@@ -312,6 +308,10 @@ exit(int status)
   end_op();
   curproc->cwd = 0;
   
+  acquire(&tickslock);
+  curproc->performance.ttime = ticks;
+  release(&tickslock);
+  
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -332,7 +332,6 @@ exit(int status)
   if(p->state == RUNNING)
       rpholder.remove(p);
   curproc->state = ZOMBIE;
-  
   sched();
   panic("zombie exit");
 }
@@ -521,7 +520,6 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
 
     if(!pq.isEmpty()){
             struct proc *np = p;
-                
             if(avoidStarv){
                 long long max = 0;
                 //np = ptable.proc;
@@ -542,7 +540,6 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                             return;
                     }
                 }
-              
             } 
             else{
                     np = pq.extractMin();
@@ -907,7 +904,7 @@ void updatePerformance(){
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == RUNNABLE){
-        p->performance.retime++;
+      p->performance.retime++;
     }
     if(p->state == RUNNING){
       p->performance.rutime++;
