@@ -201,7 +201,6 @@ UPROGS=\
 	_policy\
 	_sanity\
 	_test\
-	_sanity\
 
 
 fs.img: mkfs README path $(UPROGS)
@@ -272,7 +271,7 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c wc.c zombie.c\
-	sanity.c policy.c test.c usertests.c\
+	sanity.c policy.c test.c usertests.c SchedSanity.c\
 	printf.c umalloc.c\
 	README path dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\

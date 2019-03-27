@@ -897,7 +897,7 @@ wait_stat(int* status, struct perf * performance){
   }
 }
 
-// increments performence to all proccesses that are running or sleeping
+// increments performance to all proccesses that are running or sleeping
 void updatePerformance(){
   struct proc *p;
   acquire(&ptable.lock);
@@ -908,7 +908,7 @@ void updatePerformance(){
     if(p->state == RUNNING){
       p->performance.rutime++;
     }
-    if(p->state == SLEEPING){
+    if(p->state == SLEEPING && p->performance.ttime == 0){
       p->performance.stime++;
     }
   }
