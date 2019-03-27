@@ -150,6 +150,9 @@ void testPriority(int policyNum) {
                 sleep(5);
                 exit(0);
             }
+        }
+    }
+}
 /*
 boolean testStarvation(int npolicy, int npriority) {
     boolean result = true;
@@ -188,6 +191,7 @@ int procCalculate(int x) {
         }
         exit(0);
     }
+    return sum;
 }
 
 void testPerf(int policyNum){
@@ -275,7 +279,6 @@ void testPerf(int policyNum){
         exit(0);
     }
 }
-
 
 int main(int argc, char **argv){
 	/*if(argc < 2){
