@@ -903,15 +903,15 @@ void updatePerformance(){
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state == RUNNABLE){
-      p->performance.retime++;
-    }
-    if(p->state == RUNNING){
-      p->performance.rutime++;
-    }
-    if(p->state == SLEEPING && p->performance.ttime == 0){
-      p->performance.stime++;
-    }
+        if(p->state == RUNNABLE ){
+        p->performance.retime++;
+        }
+        if(p->state == RUNNING){
+        p->performance.rutime++;
+        }
+        if(p->state == SLEEPING && p->performance.ttime == 0){
+        p->performance.stime++;
+        }
   }
   release(&ptable.lock);
 }

@@ -116,30 +116,53 @@ void testPolicy(int policyNum) {
     }
 }
 
-int procCalculate(int x) {
+void testPriority(int policyNum) {
+    printf(1, "----------test policy %d started\n", policyNum);
+    policy(policyNum);
+    int pid1;
+    struct perf perf2;
+    pid1 = fork();
+    if (pid1 > 0) {
+        int status1;
+        wait_stat(&status1, &perf2);
+        printPerf(&perf2);
+    } else {
+        for (int a = 0; a < 100; ++a) {
+            int pid;
+            struct perf perf1;
+            pid = fork();
+            if (pid > 0) {
+                int status;
+                if(policyNum == 2)
+                    priority(1);
+                if(policyNum == 3)
+                    priority(0);
+                sleep(5);
+                wait_stat(&status, &perf1);
+            } else {
+                priority(5);
+                int sum = 0;
+                for (int i = 0; i < 100000000; ++i) {
+                    for (int j = 0; j < 100000000; ++j) {
+                        ++sum;
+                    }
+                }
+                sleep(5);
+                exit(0);
+            }
+        }
+        exit(0);
+    }
+}
+
+int procCalculate(int x){
     int sum = 0;
-    for (int i = 0; i < x; ++i) {
-        for (int j = 0; j < x; ++j) {
-            sum++;
+    for (int i = 0; i < 100000000; ++i) {
+        for (int j = 0; j < 100000000; ++j) {
+            ++sum;
         }
     }
     return sum;
-}
-
-int createProcs(int nProcs, int pr){
-    for (int i = 0; i < nProcs; i++){
-        int pid_5 = fork();
-        if (pid_5 > 0) {
-            int status_5;
-            sleep(10);
-            wait(&status_5);
-        } else {
-            priority(pr);
-            int sum = procCalculate(1000000000);
-            exit(sum);
-        }
-    }
-    return 0;
 }
 
 void testPerf(int policyNum){
@@ -160,8 +183,18 @@ void testPerf(int policyNum){
             wait(&status5);
             exit(0);
         }else{
-            createProcs(nProcs, 5);
-            exit(0);
+            for (int i = 0; i < nProcs; i++){
+                int pid_5 = fork();
+                if (pid_5 > 0) {
+                    int status_5;
+                    sleep(10);
+                    wait(&status_5);
+                } else {
+                    priority(5);
+                    int sum = procCalculate(1000000000);
+                    exit(sum);
+                }
+            }
         }
         // high priority process
         int pid2 = fork();
@@ -174,8 +207,21 @@ void testPerf(int policyNum){
             printPerf(&perf2);
             exit(0);
         }else{
-            createProcs(nProcs, 1);
-            exit(0);
+            for (int i = 0; i < nProcs; i++){
+                int pid_5 = fork();
+                if (pid_5 > 0) {
+                    int status_5;
+                    sleep(10);
+                    wait(&status_5);
+                } else {
+                    if(policyNum == 3)
+                        priority(0);
+                    else
+                        priority(1);
+                    int sum = procCalculate(1000000000);
+                    exit(sum);
+                }
+            }
         }
         // low priority process
         int pid3 = fork();
@@ -188,11 +234,21 @@ void testPerf(int policyNum){
             printPerf(&perf3);
             exit(0);
         }else{
-            createProcs(nProcs, 10);
-            exit(0);
+            for (int i = 0; i < nProcs; i++){
+                int pid_5 = fork();
+                if (pid_5 > 0) {
+                    int status_5;
+                    sleep(10);
+                    wait(&status_5);
+                } else {
+                    priority(10);
+                    int sum = procCalculate(1000000000);
+                    exit(sum);
+                }
+            }
         }
+        exit(0);
     }
-    exit(0);
 }
 
 int main(int argc, char **argv){
@@ -218,6 +274,10 @@ int main(int argc, char **argv){
 	else if(strcmp(arg, "perf2") == 0)
 		testPerf(2);
 	else if(strcmp(arg, "perf3") == 0)
+		testPerf(3);
+        else if(strcmp(arg, "priority2") == 0)
+		testPerf(2);
+        else if(strcmp(arg, "priority3") == 0)
 		testPerf(3);
 	else{
             testExitWait();
