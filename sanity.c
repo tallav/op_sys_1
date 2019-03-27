@@ -191,8 +191,22 @@ void testPerf(int policyNum){
             wait(&status5);
             exit(0);
         }else{
-            createProcs(nProcs, 5);
-            exit(0);
+            for (int i = 0; i < nProcs; i++){
+                int pid_5 = fork();
+                if (pid_5 > 0) {
+                    int status_5;
+                    sleep(10);
+                    wait(&status_5);
+                } else {
+                    if (policyNum == 3)
+                        priority(0);
+                    else
+                        priority(1);
+                    int sum = procCalculate(1000000000);
+                    exit(sum);
+                }
+            }
+
         }
         // high priority process
         int pid2 = fork();
@@ -205,8 +219,18 @@ void testPerf(int policyNum){
             printPerf(&perf2);
             exit(0);
         }else{
-            createProcs(nProcs, 1);
-            exit(0);
+            for (int i = 0; i < nProcs; i++){
+                int pid_5 = fork();
+                if (pid_5 > 0) {
+                    int status_5;
+                    sleep(10);
+                    wait(&status_5);
+                } else {
+                    priority(10);
+                    int sum = procCalculate(1000000000);
+                    exit(sum);
+                }
+            }
         }
         // low priority process
         int pid3 = fork();
@@ -219,11 +243,22 @@ void testPerf(int policyNum){
             printPerf(&perf3);
             exit(0);
         }else{
-            createProcs(nProcs, 10);
-            exit(0);
+         for (int i = 0; i < nProcs; i++){
+            int pid_5 = fork();
+            if (pid_5 > 0) {
+                int status_5;
+                sleep(10);
+                wait(&status_5);
+            } else {
+                priority(5);
+                int sum = procCalculate(1000000000);
+                exit(sum);
+            }
         }
+        
+        }
+        exit(0);
     }
-    exit(0);
 }
 
 
@@ -262,5 +297,5 @@ int main(int argc, char **argv){
             testPerf(2);
             testPerf(3);
         }
-        exit(0);
+       exit(0);
 }

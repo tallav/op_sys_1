@@ -169,6 +169,7 @@ userinit(void)
   //    rpholder.remove(p);
 
   p->state = RUNNABLE;
+  p->performUt.startRetime = ticks;
   p->timeStamp = tqCounter;
   if(POLICY == 1)
       rrq.enqueue(p);
@@ -245,7 +246,11 @@ fork(void)
   if(np->state == RUNNING)
       rpholder.remove(np);
   np->state = RUNNABLE;
+  
+  np->performUt.startRetime = ticks;
+  
   np->timeStamp = tqCounter;
+  
   
   if(POLICY == 1)
       rrq.enqueue(np);
@@ -435,6 +440,7 @@ originalScheduler(struct proc *p, struct cpu *c)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      p->performUt.startRutime = ticks;
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -463,7 +469,8 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
             c->proc = p;
             switchuvm(p);
             p->state = RUNNING;
-            
+            p->performUt.startRutime = ticks;
+            p->performance.retime += ticks - p->performUt.startRetime;
             swtch(&(c->scheduler), p->context);
             switchkvm();
             
@@ -495,6 +502,8 @@ priorityScheduler(struct proc *p, struct cpu *c)
         c->proc = p;
         switchuvm(p);
         p->state = RUNNING; 
+        p->performance.retime += ticks - p->performUt.startRetime;
+        p->performUt.startRutime = ticks;
 
         rpholder.remove(p);
         rpholder.add(p);
@@ -549,6 +558,8 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
             c->proc = np;
             switchuvm(np);
             np->state = RUNNING;
+            np->performance.retime += ticks - p->performUt.startRetime;
+            np->performUt.startRutime = ticks;
             rpholder.remove(np);
             rpholder.add(np);
 
@@ -598,6 +609,8 @@ yield(void)
     rpholder.remove(p);
   }
   p->state = RUNNABLE;
+  p->performance.rutime += ticks - p->performUt.startRutime;
+  p->performUt.startRetime = ticks;
   tqCounter++;
   p->timeStamp = tqCounter;
   
@@ -666,6 +679,8 @@ sleep(void *chan, struct spinlock *lk)
       rpholder.remove(p);
   p->state = SLEEPING;
 
+  p->performUt.startStime = ticks;
+  
   sched();
 
   // Tidy up.
@@ -688,7 +703,9 @@ wakeup1(void *chan)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){ 
+      p->performance.stime += ticks - p->performUt.startStime;  
       p->state = RUNNABLE;
+      p->performUt.startRetime = ticks;
       p->timeStamp = tqCounter;
       setAccumulator(p);  
       if(POLICY == 1)
@@ -722,6 +739,8 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
+        p->performance.stime += ticks - p->performUt.startStime;  
+        p->performUt.startRetime = ticks;
         p->timeStamp = tqCounter;
         setAccumulator(p);  
         if(POLICY == 1)
@@ -898,7 +917,7 @@ wait_stat(int* status, struct perf * performance){
 }
 
 // increments performance to all proccesses that are running or sleeping
-void updatePerformance(){
+/*void updatePerformance(){
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -913,4 +932,4 @@ void updatePerformance(){
     }
   }
   release(&ptable.lock);
-}
+}*/
