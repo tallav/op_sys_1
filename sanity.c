@@ -150,19 +150,44 @@ void testPriority(int policyNum) {
                 sleep(5);
                 exit(0);
             }
+/*
+boolean testStarvation(int npolicy, int npriority) {
+    boolean result = true;
+    policy(npolicy);
+    int NPROC = 10;
+    int pid_arr[NPROC];
+    int pid;
+    memset(&pid_arr, 0, NPROC * sizeof(int));
+    for (int i = 0; i < NPROC; ++i) {
+        pid = fork();
+        if (pid == 0) {
+            sleep(5);
+            priority(npriority);
+            for (;;) {};
+        } else {
+            pid_arr[i] = pid;
+        }
+    }
+    sleep(100);
+    
+    for (int j = 0; j < NPROC; ++j) {
+        if (pid_arr[j] != 0) {
+           kill(pid_arr[j]);
+            wait(null);
+        }
+    }
+    policy(1);
+    return result;
+}
+*/
+int procCalculate(int x) {
+    int sum = 0;
+    for (int i = 0; i < x; ++i) {
+        for (int j = 0; j < x; ++j) {
+            sum++;
         }
         exit(0);
     }
-}
-
-int procCalculate(int x){
-    int sum = 0;
-    for (int i = 0; i < 100000000; ++i) {
-        for (int j = 0; j < 100000000; ++j) {
-            ++sum;
-        }
-    }
-    return sum;
 }
 
 void testPerf(int policyNum){
@@ -251,6 +276,7 @@ void testPerf(int policyNum){
     }
 }
 
+
 int main(int argc, char **argv){
 	/*if(argc < 2){
 		printf(1, "argv missing\n");
@@ -290,5 +316,5 @@ int main(int argc, char **argv){
             testPerf(2);
             testPerf(3);
         }
-        exit(0);
+       exit(0);
 }

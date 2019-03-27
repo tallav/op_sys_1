@@ -44,6 +44,11 @@ struct perf {
     int rutime;
 };
 
+struct perfUtil {
+    int startStime;
+    int startRetime;
+    int startRutime;
+};
 
 
 // Per-process state
@@ -66,6 +71,7 @@ struct proc {
   long long accumulator;         // Process accumulator
   long long timeStamp; 
   struct perf performance;
+  struct perfUtil performUt;
 };
 
 
