@@ -169,10 +169,7 @@ userinit(void)
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
   acquire(&ptable.lock);
-
-  //if(p->state == RUNNING)
-  //    rpholder.remove(p);
-
+  
   p->state = RUNNABLE;
   p->performUt.startRetime = ticks;
   p->timeStamp = tqCounter;
@@ -247,15 +244,11 @@ fork(void)
   pid = np->pid;
   
   acquire(&ptable.lock);
-  
-  if(np->state == RUNNING)
-      rpholder.remove(np);
+
   np->state = RUNNABLE;
-  
   np->performUt.startRetime = ticks;
   
   np->timeStamp = tqCounter;
-  
   
   if(POLICY == 1)
       rrq.enqueue(np);
@@ -542,9 +535,7 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                             }
                         }
                 }
-
                 avoidStarv = 0;
-
                 if (np != null){
                     if (!pq.extractProc(np)){
                             release(&ptable.lock);
@@ -925,15 +916,15 @@ wait_stat(int* status, struct perf * performance){
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state == RUNNABLE){
-      p->performance.retime++;
-    }
-    if(p->state == RUNNING){
-      p->performance.rutime++;
-    }
-    if(p->state == SLEEPING && p->performance.ttime == 0){
-      p->performance.stime++;
-    }
+        if(p->state == RUNNABLE ){
+        p->performance.retime++;
+        }
+        if(p->state == RUNNING){
+        p->performance.rutime++;
+        }
+        if(p->state == SLEEPING && p->performance.ttime == 0){
+        p->performance.stime++;
+        }
   }
   release(&ptable.lock);
 }*/
