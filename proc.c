@@ -104,9 +104,14 @@ found:
 
   release(&ptable.lock);
   
-  acquire(&tickslock);
   p->performance.ctime = ticks;
-  release(&tickslock);
+  p->performance.stime = 0;
+  p->performance.retime = 0;
+p->performance.rutime = 0;
+p->performance.ttime = 0;
+p->performUt.startRetime = 0;
+p->performUt.startRutime = 0;
+p->performUt.startStime = 0;
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -313,9 +318,7 @@ exit(int status)
   end_op();
   curproc->cwd = 0;
   
-  acquire(&tickslock);
   curproc->performance.ttime = ticks;
-  release(&tickslock);
   
   acquire(&ptable.lock);
 
@@ -558,7 +561,7 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
             c->proc = np;
             switchuvm(np);
             np->state = RUNNING;
-            np->performance.retime += ticks - p->performUt.startRetime;
+            np->performance.retime += ticks - np->performUt.startRetime;
             np->performUt.startRutime = ticks;
             rpholder.remove(np);
             rpholder.add(np);
@@ -608,9 +611,9 @@ yield(void)
   if(p->state == RUNNING){
     rpholder.remove(p);
   }
-  p->state = RUNNABLE;
-  p->performance.rutime += ticks - p->performUt.startRutime;
   p->performUt.startRetime = ticks;
+  p->performance.rutime += ticks - p->performUt.startRutime;
+  p->state = RUNNABLE;
   tqCounter++;
   p->timeStamp = tqCounter;
   
@@ -677,9 +680,10 @@ sleep(void *chan, struct spinlock *lk)
   p->chan = chan;
   if(p->state == RUNNING)
       rpholder.remove(p);
-  p->state = SLEEPING;
-
+  
   p->performUt.startStime = ticks;
+  p->performance.rutime += ticks - p->performUt.startRutime;
+  p->state = SLEEPING;
   
   sched();
 
@@ -703,8 +707,8 @@ wakeup1(void *chan)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){ 
-      p->performance.stime += ticks - p->performUt.startStime;  
       p->state = RUNNABLE;
+      p->performance.stime += ticks - p->performUt.startStime;  
       p->performUt.startRetime = ticks;
       p->timeStamp = tqCounter;
       setAccumulator(p);  
@@ -739,7 +743,7 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
-        p->performance.stime += ticks - p->performUt.startStime;  
+       // p->performance.stime += ticks - p->performUt.startStime;  
         p->performUt.startRetime = ticks;
         p->timeStamp = tqCounter;
         setAccumulator(p);  
