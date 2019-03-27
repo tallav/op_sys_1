@@ -142,7 +142,7 @@ sys_wait_stat(void)
      int* status;
      struct perf* perform;
 
-     if ((argptr(0, (char**)(&status), sizeof(int)) < 0) || (argptr(0, (void*)(&perform), sizeof(*perform)) < 0))
+     if ((argptr(0, (char**)(&status), sizeof(int)) < 0) || (argptr(1, (void*)(&perform), sizeof(*perform)) < 0))
         return -1;
     return wait_stat(status,perform);
 }
