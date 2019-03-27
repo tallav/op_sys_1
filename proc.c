@@ -531,17 +531,17 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
                             }
                         }
                 }
-                //cprintf("max: %d\n", max);
+
                 avoidStarv = 0;
+
                 if (np != null){
                     if (!pq.extractProc(np)){
                             release(&ptable.lock);
-                           // procdump();
-                           // cprintf("couldnt find\n");
                             return;
                     }
                 }
-            } else{
+            } 
+            else{
                     np = pq.extractMin();
             }
             // Switch to chosen process.  It is the process's job
