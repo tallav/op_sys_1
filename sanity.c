@@ -145,12 +145,51 @@ void testPerf(int policyNum){
     }
 }
 
+boolean testStarvation(int npolicy, int npriority) {
+    boolean result = true;
+    policy(npolicy);
+    int NPROC = 10;
+    int pid_arr[NPROC];
+    int pid;
+    memset(&pid_arr, 0, NPROC * sizeof(int));
+    for (int i = 0; i < NPROC; ++i) {
+        pid = fork();
+        if (pid == 0) {
+            sleep(5);
+            priority(npriority);
+            for (;;) {};
+        } else {
+            pid_arr[i] = pid;
+        }
+    }
+    sleep(100);
+      
+    //struct proc *p;
+    
+    //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+     //   printf(1,"pid %d state",p->pid);
+   // }
+    
+    procdump();
+    
+    for (int j = 0; j < NPROC; ++j) {
+        if (pid_arr[j] != 0) {
+           kill(pid_arr[j]);
+            wait(null);
+        }
+    }
+    policy(1);
+    return result;
+}
+
+
+
 int main(int argc, char **argv){
 	/*if(argc < 2){
 		printf(1, "argv missing\n");
 		exit(0);
 	}*/
-	char* arg = argv[1];
+	/*char* arg = argv[1];
 	if(strcmp(arg, "exit") == 0)
 		testExitWait();
 	else if(strcmp(arg, "detach") == 0)
@@ -169,12 +208,14 @@ int main(int argc, char **argv){
 		testWaitStat();
 		testPerf(1);
 		testPerf(2);
-        testPerf(3);
+        testPerf(3);*/
         /*
         testPolicy(1);
         testPolicy(2);
         testPolicy(3);
         */
-    }
-    exit(0);
+        testStarvation(2, 1);
+           
+    
+        exit(0);
 }

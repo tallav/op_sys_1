@@ -522,7 +522,6 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
             struct proc *np = p;
             if(avoidStarv){
                 long long max = 0;
-                //np = ptable.proc;
                 for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
                         if (p->state == RUNNABLE){
                             if (tqCounter - p->timeStamp > max || np == null){
