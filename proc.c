@@ -12,10 +12,11 @@ extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
-long long tqCounter = 0; /*Time Quantums counter*/
-int POLICY = 1;
-int avoidStarv = 0; 
+long long tqCounter = 0; // Time Quantums counter
+int POLICY = 1; // scheduler policy - round robin by default (can be changed with policy syscall)
+int avoidStarv = 0; // flag that get value 1 evry 100 time quantumes
 
+// returns the process accumulator
 long long getAccumulator(struct proc *p) {
     return p->accumulator;
 }
@@ -104,14 +105,15 @@ found:
 
   release(&ptable.lock);
   
-  p->performance.ctime = ticks;
+  // initialize performance fields
+  p->performance.ctime = ticks; // new process gets ctime
   p->performance.stime = 0;
   p->performance.retime = 0;
-p->performance.rutime = 0;
-p->performance.ttime = 0;
-p->performUt.startRetime = 0;
-p->performUt.startRutime = 0;
-p->performUt.startStime = 0;
+  p->performance.rutime = 0;
+  p->performance.ttime = 0;
+  p->performUt.startRetime = 0;
+  p->performUt.startRutime = 0;
+  p->performUt.startStime = 0;
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
@@ -171,15 +173,15 @@ userinit(void)
   acquire(&ptable.lock);
   
   p->state = RUNNABLE;
-  p->performUt.startRetime = ticks;
-  p->timeStamp = tqCounter;
+  p->performUt.startRetime = ticks; // update last READY time for performance calculation
+  p->timeStamp = tqCounter; // policy 3 - holds the last time the process executed
+  // insert the process to the runnable queue
   if(POLICY == 1)
       rrq.enqueue(p);
   else
       pq.put(p);
-  
-  p->priority = 5; // Set the priority of new process to 5
-  setAccumulator(p); 
+  p->priority = 5; // set the priority of the new process to 5
+  setAccumulator(p); // set the accumulator of the new process
   
   release(&ptable.lock);
 }
@@ -246,42 +248,40 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-  np->performUt.startRetime = ticks;
-  
-  np->timeStamp = tqCounter;
-  
+  np->performUt.startRetime = ticks; // update last READY time for performance calculation
+  np->timeStamp = tqCounter; // policy 3 - holds the last time the process executed
+  // insert the process to the runnable queue
   if(POLICY == 1)
       rrq.enqueue(np);
   else
       pq.put(np);
-  
-  np->priority = 5; // Set the priority of new process to 5
-  setAccumulator(np);
+  np->priority = 5; // set the priority of the new process to 5
+  setAccumulator(np); // set the accumulator of the new process
 
   release(&ptable.lock);
   return pid;
 }
 
+// Each time a new process is created or a process shifts from the blocked state to the runnable state, 
+// set the value of its accumulator field to the minimum value of the accumulator fields of all the runnable/running processe.
+// If it is the only runnable process, set its accumulator value to 0.
 void setAccumulator(struct proc *p){
   long long acc1;
   long long acc2; 
 
   if (pq.getMinAccumulator(&acc1)){
-      if (rpholder.getMinAccumulator(&acc2)){
-            if (acc1<acc2){
-                   p->accumulator = acc1;
-            } else{
-                   p->accumulator = acc2;
-            }
-      } else{
-             p->accumulator = acc1;
-      }
-  }
-  else if (rpholder.getMinAccumulator(&acc2)){
+    if (rpholder.getMinAccumulator(&acc2)){
+        if (acc1<acc2)
+            p->accumulator = acc1;
+        else
+            p->accumulator = acc2;
+    } else {
+        p->accumulator = acc1;
+    }
+  } else if (rpholder.getMinAccumulator(&acc2)){
         p->accumulator = acc2;
-  }
-  else{
-       p->accumulator = 0;
+  } else {
+        p->accumulator = 0;
   }
 }
 
@@ -311,7 +311,7 @@ exit(int status)
   end_op();
   curproc->cwd = 0;
   
-  curproc->performance.ttime = ticks;
+  curproc->performance.ttime = ticks; // exited process gets ctime
   
   acquire(&ptable.lock);
 
@@ -327,7 +327,7 @@ exit(int status)
     }
   }
   
-  // Update process status 
+  // update process exit status 
   curproc->exitStatus = status;
   // Jump into the scheduler, never to return.
   if(p->state == RUNNING)
@@ -339,6 +339,7 @@ exit(int status)
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
+// return the exit status in status arg.
 int
 wait(int *status)
 {
@@ -365,7 +366,7 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-        // Return the terminated child exit status.
+        // return the terminated child exit status.
         if(status != null){ 
             *status = p->exitStatus;
         }
@@ -396,22 +397,22 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p = null /*for uninitialize error*/;
+  struct proc *p = null; // for uninitialize error
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+  // checks the POLICY value and choose the appropriate scheduler
   for(;;){
     switch(POLICY){
-        case 0: /*for testing*/
+        case 0: // for testing
             originalScheduler(p, c);
             break;
-        case 1: /*Round Robin*/
+        case 1: // Round Robin
             roundRobinScheduler(p, c);
             break;
-        case 2: /*Priority Scheduling*/
+        case 2: // Priority Scheduling
             priorityScheduler(p, c);
             break;
-        case 3: /*Extended Priority Scheduling*/
+        case 3: // Extended Priority Scheduling
             extendedPriorityScheduler(p, c);
             break;
     }
@@ -436,7 +437,7 @@ originalScheduler(struct proc *p, struct cpu *c)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      p->performUt.startRutime = ticks;
+      
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -457,25 +458,28 @@ roundRobinScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
     
     if(!rrq.isEmpty()){
-            p = rrq.dequeue();
+        p = rrq.dequeue();
 
-            // Switch to chosen process.  It is the process's job
-            // to release ptable.lock and then reacquire it
-            // before jumping back to us.
-            c->proc = p;
-            switchuvm(p);
-            p->state = RUNNING;
-            p->performUt.startRutime = ticks;
-            p->performance.retime += ticks - p->performUt.startRetime;
-            swtch(&(c->scheduler), p->context);
-            switchkvm();
-            
-            rpholder.remove(p);
-            rpholder.add(p);
-            // Process is done running for now.
-            // It should have changed its p->state before coming back.
-            c->proc = 0;
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+        
+        p->performance.retime += ticks - p->performUt.startRetime; // add to READY time
+        p->performUt.startRutime = ticks; // update last RUNNING time for performance calculation
+        rpholder.remove(p); // makes sure the process is not in the queue (avoids overflow)
+        rpholder.add(p); // insert the process to the running holder
+        
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
     }
+    
     release(&ptable.lock);
 }
 
@@ -488,7 +492,6 @@ priorityScheduler(struct proc *p, struct cpu *c)
     // dequeue from RoundRobinQueue the next process to run.
     acquire(&ptable.lock);
 
-
     if(!pq.isEmpty()){
         p = pq.extractMin();
 
@@ -498,11 +501,11 @@ priorityScheduler(struct proc *p, struct cpu *c)
         c->proc = p;
         switchuvm(p);
         p->state = RUNNING; 
-        p->performance.retime += ticks - p->performUt.startRetime;
-        p->performUt.startRutime = ticks;
-
-        rpholder.remove(p);
-        rpholder.add(p);
+        
+        p->performance.retime += ticks - p->performUt.startRetime; // add to READY time
+        p->performUt.startRutime = ticks; // update last RUNNING time for performance calculation
+        rpholder.remove(p); // makes sure the process is not in the queue (avoids overflow)
+        rpholder.add(p); // insert the process to the running holder
 
         swtch(&(c->scheduler), p->context);
         switchkvm();
@@ -524,45 +527,46 @@ extendedPriorityScheduler(struct proc *p, struct cpu *c)
     acquire(&ptable.lock);
 
     if(!pq.isEmpty()){
-            struct proc *np = p;
-            if(avoidStarv){
-                long long max = 0;
-                for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // Run over all the ptable and look for the process which didn't work for the lonest time.
-                        if (p->state == RUNNABLE){
-                            if (tqCounter - p->timeStamp > max || np == null){
-                                    np = p;
-                                    max = tqCounter - p->timeStamp;
-                            }
-                        }
-                }
-                avoidStarv = 0;
-                if (np != null){
-                    if (!pq.extractProc(np)){
-                            release(&ptable.lock);
-                            return;
+        struct proc *np = p;
+        if(avoidStarv){ // every 100 time quantums (flag update in yield) 
+            long long max = 0;
+            for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // run over all the ptable and look for the process which didn't work for the lonest time
+                if (p->state == RUNNABLE){
+                    if (tqCounter - p->timeStamp > max || np == null){
+                        np = p;
+                        max = tqCounter - p->timeStamp;
                     }
                 }
-            } 
-            else{
-                    np = pq.extractMin();
             }
-            // Switch to chosen process.  It is the process's job
-            // to release ptable.lock and then reacquire it
-            // before jumping back to us.
-            c->proc = np;
-            switchuvm(np);
-            np->state = RUNNING;
-            np->performance.retime += ticks - np->performUt.startRetime;
-            np->performUt.startRutime = ticks;
-            rpholder.remove(np);
-            rpholder.add(np);
+            avoidStarv = 0;
+            if (np != null){ // process was found in the ptable
+                if (!pq.extractProc(np)){ // try to extract it from the runnable queue
+                    release(&ptable.lock);
+                    return;
+                }
+            }
+        } else { // work like policy 2
+            np = pq.extractMin();
+        }
+        
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = np;
+        switchuvm(np);
+        np->state = RUNNING;
+        
+        np->performance.retime += ticks - np->performUt.startRetime; // add to READY time
+        np->performUt.startRutime = ticks; // update last RUNNING time for performance calculation
+        rpholder.remove(np); // makes sure the process is not in the queue (avoids overflow)
+        rpholder.add(np); // insert the process to the running holder
 
-            swtch(&(c->scheduler), np->context);
-            switchkvm();
+        swtch(&(c->scheduler), np->context);
+        switchkvm();
 
-            // Process is done running for now.
-            // It should have changed its p->state before coming back.
-            c->proc = 0;
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
     }
     release(&ptable.lock);
 }
@@ -598,25 +602,24 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  
   struct proc *p = myproc();
   if(p->state == RUNNING){
     rpholder.remove(p);
+    p->performance.rutime += ticks - p->performUt.startRutime; // add to RUNNING time
   }
-  p->performUt.startRetime = ticks;
-  p->performance.rutime += ticks - p->performUt.startRutime;
   p->state = RUNNABLE;
-  tqCounter++;
-  p->timeStamp = tqCounter;
-  
-  if(POLICY == 1){
+  p->performUt.startRetime = ticks; // update last READY time for performance calculation
+  p->timeStamp = tqCounter; // policy 3 - holds the last time the process executed
+  tqCounter++; // update the counter
+  // insert the process to the runnable queue
+  if(POLICY == 1)
       rrq.enqueue(p);
-  }
-  else{
+  else {
       pq.put(p);
       p->accumulator += p->priority;
-      if (POLICY == 3 && (tqCounter % 100 == 0)){
+      if (POLICY == 3 && tqCounter % 100 == 0)
          avoidStarv = 1;
-      }
   }
   
   sched();
@@ -667,14 +670,16 @@ sleep(void *chan, struct spinlock *lk)
     acquire(&ptable.lock);  //DOC: sleeplock1
     release(lk); 
   }
+  
+  if(p->state == RUNNING){
+    rpholder.remove(p);
+    p->performance.rutime += ticks - p->performUt.startRutime; // add to RUNNING time
+  }
+  
   // Go to sleep.
   p->chan = chan;
-  if(p->state == RUNNING)
-      rpholder.remove(p);
-  
-  p->performUt.startStime = ticks;
-  p->performance.rutime += ticks - p->performUt.startRutime;
   p->state = SLEEPING;
+  p->performUt.startStime = ticks; // update last SLEEPING time for performance calculation
   
   sched();
 
@@ -699,10 +704,12 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan){ 
       p->state = RUNNABLE;
-      p->performance.stime += ticks - p->performUt.startStime;  
-      p->performUt.startRetime = ticks;
-      p->timeStamp = tqCounter;
-      setAccumulator(p);  
+      
+      p->performance.stime += ticks - p->performUt.startStime; // add to SLEEPING time 
+      p->performUt.startRetime = ticks; // update last READY time for performance calculation
+      p->timeStamp = tqCounter; // policy 3 - holds the last time the process executed
+      setAccumulator(p); // set the process accumulater after beeing blocked
+      // insert the process to the runnable queue
       if(POLICY == 1)
         rrq.enqueue(p);
       else
@@ -734,10 +741,12 @@ kill(int pid)
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING){
         p->state = RUNNABLE;
-       // p->performance.stime += ticks - p->performUt.startStime;  
-        p->performUt.startRetime = ticks;
-        p->timeStamp = tqCounter;
-        setAccumulator(p);  
+        
+        p->performance.stime += ticks - p->performUt.startStime; // add to SLEEPING time 
+        p->performUt.startRetime = ticks; // update last READY time for performance calculation
+        p->timeStamp = tqCounter; // policy 3 - holds the last time the process executed
+        setAccumulator(p); // set the process accumulater after beeing blocked 
+        // insert the process to the runnable queue
         if(POLICY == 1)
             rrq.enqueue(p);
         else
@@ -797,10 +806,7 @@ void
 policy(int policy_id)
 {
     struct proc *p;
-    
     acquire(&ptable.lock);
-           
-    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(policy_id == 1 && (POLICY == 2 || POLICY == 3)){ /*change from Priority to Round Robin policy*/
             pq.switchToRoundRobinPolicy();
@@ -820,7 +826,7 @@ policy(int policy_id)
             pq.switchToRoundRobinPolicy();
         }
     }
-     POLICY = policy_id;
+    POLICY = policy_id;
     release(&ptable.lock);
 }
 
@@ -864,7 +870,7 @@ procdump(void)
 // Return the pid of the terminated child process or -1 upon failure.
 int
 wait_stat(int* status, struct perf * performance){
-      struct proc *p;
+  struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
 

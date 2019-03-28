@@ -50,7 +50,6 @@ struct perfUtil {
     int startRutime;
 };
 
-
 // Per-process state
 struct proc {
   uint sz;                       // Size of process memory (bytes)
@@ -66,12 +65,12 @@ struct proc {
   struct file *ofile[NOFILE];    // Open files
   struct inode *cwd;             // Current directory  
   char name[16];                 // Process name (debugging)
-  int exitStatus;
+  int exitStatus;                // Process exit status - get value in exit() and return it in wait()
   int priority;                  // Process priority
   long long accumulator;         // Process accumulator
-  long long timeStamp; 
-  struct perf performance;
-  struct perfUtil performUt;
+  long long timeStamp;           // holds the last time the process executed (used in policy 3)
+  struct perf performance;       // Process performance values
+  struct perfUtil performUt;     // Utility struct that helps calculate performance
 };
 
 
