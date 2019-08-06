@@ -1,4 +1,0 @@
-
-detachTest
-    
-quitXV6

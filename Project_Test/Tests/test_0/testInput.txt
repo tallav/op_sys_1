@@ -1,4 +1,0 @@
-
-usertests
-
-quitXV6

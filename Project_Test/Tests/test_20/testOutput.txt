@@ -1,4 +1,0 @@
-$ $ "policy 1"
-$ $ "policy 3"
-$ $ "policy 2"
-$ $ Finished Yehonatan Peleg Test, quiting...

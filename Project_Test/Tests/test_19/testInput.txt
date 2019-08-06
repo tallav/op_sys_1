@@ -1,8 +1,0 @@
-
-pathTest
-pathTest4
-echo Hello_World_XV6 | cat
-pathTest5
-echo Hello_World_XV6 | cat
-    
-quitXV6

@@ -1,4 +1,0 @@
-
-schedulingTest7
-    
-quitXV6

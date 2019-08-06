@@ -1,5 +1,0 @@
-
-prioritySysTest
-policySysTest
-    
-quitXV6

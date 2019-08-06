@@ -1,4 +1,0 @@
-
-exitWait
-    
-quitXV6
